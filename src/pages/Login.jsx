@@ -20,10 +20,10 @@ export function Login() {
           onSubmit={handleAuthSubmit}
           className="sm:max-w-lg sm:px-15 sm:h-auto sm:py-34 sm:rounded-2xl bg-rose-900 text-amber-50 flex flex-col p-10 w-full h-full pt-20"
         >
-          <h2 className="text-2xl/tight font-bold text-olive-300">
+          <h2 className="text-2xl/tight font-bold text-olive-200">
             Welcome Back!
           </h2>
-          <p className="text-lg mb-10 text-olive-300/80">
+          <p className="text-lg mb-10 text-olive-300/90">
             Log back into to your account:
           </p>
           <input
@@ -44,7 +44,7 @@ export function Login() {
             Invalid name or password. Please try again.
           </p>
           <button
-            className="p-4 bg-rose-500 font rounded-2xl my-5 text-xl hover:bg-olive-700 hover:shadow-2xl cursor-pointer"
+            className="p-4 bg-rose-500 font rounded-2xl my-5 text-xl hover:bg-rose-700/50 hover:shadow-2xl cursor-pointer"
             type="submit"
           >
             Login
@@ -67,7 +67,7 @@ export function Login() {
         <form
           id="signup-form"
           onSubmit={handleAuthSubmit}
-          className="sm:max-w-lg sm:px-15 sm:h-auto sm:py-34 sm:rounded-2xl bg-olive-900 text-amber-50 flex flex-col p-10 w-full h-full pt-20"
+          className="sm:max-w-lg sm:px-15 sm:h-auto sm:py-34 sm:rounded-2xl bg-rose-900 text-amber-50 flex flex-col p-10 w-full h-full pt-20"
         >
           <h2 className="text-2xl/tight font-bold text-olive-300">Join Us!</h2>
           <p className="text-lg mb-10 text-olive-300/80">
@@ -75,21 +75,21 @@ export function Login() {
           </p>
 
           <input
-            className="bg-olive-950/50 p-2 pl-4 rounded-2xl my-1 border border-transparent hover:bg-olive-950/80 focus-within:border-olive-950 focus-within:bg-olive-950 focus-within:hover:bg-olive-950 outline-none"
+            className="bg-rose-950 p-2 pl-4 rounded-2xl my-1 border border-transparent hover:bg-rose-950/80 focus-within:border-rose-950 focus-within:bg-rose-950 focus-within:hover:bg-rose-950 outline-none"
             type="text"
             id="signup-name"
             placeholder="name"
             required
           />
           <input
-            className="bg-olive-950/50 p-2 pl-4 rounded-2xl my-1 border border-transparent hover:bg-olive-950/80 focus-within:border-olive-950 focus-within:bg-olive-950 focus-within:hover:bg-olive-950 outline-none"
+            className="bg-rose-950 p-2 pl-4 rounded-2xl my-1 border border-transparent hover:bg-rose-950/80 focus-within:border-rose-950 focus-within:bg-rose-950 focus-within:hover:bg-rose-950 outline-none"
             type="password"
             id="signup-password"
             placeholder="Password"
             required
           />
           <input
-            className="bg-olive-950/50 p-2 pl-4 rounded-2xl my-1 border border-transparent hover:bg-olive-950/80 focus-within:border-olive-950 focus-within:bg-olive-950 focus-within:hover:bg-olive-950 outline-none"
+            className="bg-rose-950 p-2 pl-4 rounded-2xl my-1 border border-transparent hover:bg-rose-950/80 focus-within:border-rose-950 focus-within:bg-rose-950 focus-within:hover:bg-rose-950 outline-none"
             type="password"
             id="signup-confirm"
             placeholder="Confirm Password"
@@ -98,7 +98,7 @@ export function Login() {
           <p id="signup-error" className="text-red-400 text-sm mb-4 hidden"></p>
 
           <button
-            className="p-4 bg-olive-800 font rounded-2xl my-5 text-xl hover:bg-olive-700 hover:shadow-2xl cursor-pointer transition-all duration-200"
+            className="p-4 bg-rose-500 font rounded-2xl my-5 text-xl hover:bg-rose-700/50 hover:shadow-2xl cursor-pointer transition-all duration-200"
             type="submit"
           >
             Create Account
