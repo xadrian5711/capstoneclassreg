@@ -1,14 +1,12 @@
 import React from "react";
-import { Home } from "./Home.jsx";
 import { Header } from "../components/Header.jsx";
-import { Login } from "./Login.jsx";
+import { Outlet } from "react-router-dom";
 
 export function Layout() {
   return (
     <div>
-      <Login />
-      {/* <Header />
-      <Home /> */}
+      <Header />
+      <Outlet />
     </div>
   );
 }
