@@ -27,10 +27,10 @@ const ProfileField = ({
         type={type}
         value={value}
         onChange={onChange}
-        className="ml-2 rounded bg-rose-900/50 p-1 text-white/90 font-thin text-lg w-full focus:outline-none focus:ring-2 focus:ring-rose-400"
+        className="ml-2 rounded bg-rose-900/50 p-1 text-white font-thin text-lg w-full focus:outline-none focus:ring-2 focus:ring-rose-400"
       />
     ) : (
-      <p className="text-xl pl-2 text-white/90 font-thin">{value}</p>
+      <p className="text-xl pl-2 text-white font-thin">{value}</p>
     )}
   </div>
 );
@@ -49,8 +49,8 @@ export function Modal({ onClose }) {
 
   return (
     <div className="absolute max-w-1/3 bg-rose-800 p-4 rounded-2xl shadow-lg flex gap-2 flex-col mt-2 ml-2">
-      <div className="flex items-center w-full">
-        <h1 className="text-2xl text-white font-mono">Profile info</h1>
+      <div className="flex items-center w-full pb-2">
+        <h1 className="text-2xl text-white font-mono ">Profile info</h1>
         <div className="flex gap-4 justify-end grow">
           <BsFillPencilFill
             onClick={() => setEdit(!edit)}
