@@ -29,8 +29,8 @@ export function Login() {
           <input
             className="bg-rose-950 p-2 pl-4 rounded-2xl my-1 border border-transparent hover:bg-rose-950/80 focus-within:border-rose-950 focus-within:bg-rose-950 focus-within:hover:bg-rose-950 outline-none"
             type="text"
-            id="login-name"
-            placeholder="name"
+            id="login-username"
+            placeholder="username"
             required
           />
           <input
@@ -77,8 +77,15 @@ export function Login() {
           <input
             className="bg-rose-950 p-2 pl-4 rounded-2xl my-1 border border-transparent hover:bg-rose-950/80 focus-within:border-rose-950 focus-within:bg-rose-950 focus-within:hover:bg-rose-950 outline-none"
             type="text"
-            id="signup-name"
-            placeholder="name"
+            id="signup-email"
+            placeholder="email"
+            required
+          />
+          <input
+            className="bg-rose-950 p-2 pl-4 rounded-2xl my-1 border border-transparent hover:bg-rose-950/80 focus-within:border-rose-950 focus-within:bg-rose-950 focus-within:hover:bg-rose-950 outline-none"
+            type="text"
+            id="signup-username"
+            placeholder="username"
             required
           />
           <input

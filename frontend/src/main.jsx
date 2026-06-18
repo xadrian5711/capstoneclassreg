@@ -1,13 +1,17 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
-import "./index.css";
+import React from "react";
+import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
+import { ThemeProvider } from "./components/ThemeProvider.jsx";
+import { BrowserRouter } from "react-router-dom";
+import "./App.css"; // <--- Move it here, right before render
 
-createRoot(document.getElementById("root")).render(
-  <StrictMode>
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
     <BrowserRouter>
-      <App />
+      {/* Wrap your entire App in the ThemeProvider */}
+      <ThemeProvider>
+        <App />
+      </ThemeProvider>
     </BrowserRouter>
-  </StrictMode>,
+  </React.StrictMode>,
 );

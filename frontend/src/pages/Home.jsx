@@ -37,12 +37,14 @@ const fakeClasses = [
 
 export function Home() {
   return (
-    <div className="flex flex-col items-center flex-1 w-full bg-neutral-950/90 p-8 pt-12">
-      <h1 className="text-3xl font-bold text-white mb-8">Class Schedule</h1>
+    <div className="flex flex-col items-center flex-1 w-full bg-gray-50 dark:bg-neutral-950/90 p-8 pt-12 transition-colors duration-300">
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 transition-colors duration-300">
+        Class Schedule
+      </h1>
 
       <div className="w-full max-w-5xl overflow-x-auto rounded-xl shadow-lg">
-        <table className="w-full text-left text-neutral-300 border-collapse">
-          <thead className="bg-neutral-900 text-neutral-100 uppercase text-sm">
+        <table className="w-full text-left text-gray-700 dark:text-neutral-300 border-collapse transition-colors duration-300">
+          <thead className="bg-gray-200 dark:bg-neutral-900 text-gray-800 dark:text-neutral-100 uppercase text-sm transition-colors duration-300">
             <tr>
               <th className="px-6 py-4">Course Code</th>
               <th className="px-6 py-4">Course Name</th>
@@ -51,13 +53,15 @@ export function Home() {
               <th className="px-6 py-4">Room</th>
             </tr>
           </thead>
-          <tbody className="bg-neutral-800/50 divide-y divide-neutral-700/50">
+          <tbody className="bg-white dark:bg-neutral-800/50 divide-y divide-gray-200 dark:divide-neutral-700/50 transition-colors duration-300">
             {fakeClasses.map((cls) => (
               <tr
                 key={cls.id}
-                className="hover:bg-neutral-700/50 transition-colors"
+                className="hover:bg-gray-100 dark:hover:bg-neutral-700/50 transition-colors"
               >
-                <td className="px-6 py-4 font-medium text-white">{cls.code}</td>
+                <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                  {cls.code}
+                </td>
                 <td className="px-6 py-4">{cls.name}</td>
                 <td className="px-6 py-4">{cls.instructor}</td>
                 <td className="px-6 py-4">{cls.schedule}</td>

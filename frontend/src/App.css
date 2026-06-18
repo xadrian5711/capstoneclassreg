@@ -1,1 +1,5 @@
+/* App.css */
 @import "tailwindcss";
+
+/* Forces Tailwind to apply dark: classes when .dark is on the root */
+@custom-variant dark (&:is(.dark *));

@@ -1,1 +1,5 @@
+/* global.css */
 @import "tailwindcss";
+
+/* Ensure this is exactly like this: */
+@custom-variant dark (&:where(.dark, .dark *));
