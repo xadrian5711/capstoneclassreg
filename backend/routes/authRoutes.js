@@ -42,6 +42,38 @@ router.post("/signup", async (req, res) => {
   }
 });
 
-// We will add the login route here later!
+// Route: POST /api/auth/login
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // 1. Check if the user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      // Notice we say "Invalid email or password" so hackers don't know which one they got wrong!
+      return res.status(400).json({ error: "Invalid email or password." });
+    }
+
+    // 2. Compare the typed password with the hashed password in the database
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: "Invalid email or password." });
+    }
+
+    // 3. Success! Send back the user data
+    res.status(200).json({
+      message: "Login successful!",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        isAdmin: user.isAdmin,
+      },
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Server error. Please try again." });
+  }
+});
 
 export default router;
