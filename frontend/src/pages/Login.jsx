@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { MdArrowDropDown } from "react-icons/md";
 
 export function Login() {
   const [isLogin, setIsLogin] = useState(true);
   const navigate = useNavigate();
+  const [clicked, setClicked] = useState(false);
 
   // 1. State to hold the form inputs
   const [formData, setFormData] = useState({
@@ -11,6 +13,7 @@ export function Login() {
     username: "",
     password: "",
     confirmPassword: "",
+    adminCode: "",
   });
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -119,6 +122,35 @@ export function Login() {
             placeholder="Confirm Password"
             required={!isLogin}
           />
+        )}
+        {!isLogin && (
+          <div className="flex flex-col mt-2 mb-1">
+            {/* The Clickable Toggle */}
+            <div
+              className="flex items-center text-sm text-olive-300/80 hover:text-olive-300 cursor-pointer transition-colors duration-200 w-fit select-none"
+              onClick={() => setClicked(!clicked)}
+            >
+              <span className="pr-1 font-medium">
+                {clicked ? "Cancel admin code" : "Have an admin code?"}
+              </span>
+              <MdArrowDropDown
+                className={`text-lg transition-transform duration-300 ${clicked ? "rotate-180" : ""}`}
+              />
+            </div>
+
+            {/* The Input Field */}
+            {clicked && (
+              <input
+                name="adminCode"
+                value={formData.adminCode} // Fixed: matches your state
+                onChange={handleChange}
+                className="bg-rose-950 p-2 pl-4 rounded-2xl mt-2 border border-transparent hover:bg-rose-950/80 focus-within:border-rose-950 focus-within:bg-rose-950 outline-none transition-all"
+                type="password"
+                placeholder="Enter secret admin code"
+                // Note: No 'required' attribute here so normal users can still sign up!
+              />
+            )}
+          </div>
         )}
 
         {/* Display dynamic error message */}
