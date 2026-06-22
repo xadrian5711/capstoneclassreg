@@ -23,6 +23,7 @@ app.use(morgan("dev"));
 app.use(express.json());
 app.use(cors());
 app.use(passport.initialize());
+applyPassportStrategy(passport);
 
 // 5. Routes
 app.use("/api/auth", authRoutes); // <-- UNCOMMENTED THIS
