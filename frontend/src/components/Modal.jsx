@@ -1,126 +1,294 @@
 import { useState, useEffect } from "react";
 import { BsFillPencilFill, BsFillXCircleFill } from "react-icons/bs";
 
-const ProfileField = ({
-  label,
-  name,
-  value,
-  edit,
-  onChange,
-  type = "text",
-}) => (
-  <div className="flex items-center mt-2">
-    <h1 className="text-xl text-white w-28 shrink-0">{label}:</h1>
-    {edit ? (
-      <input
-        name={name}
-        type={type}
-        value={value}
-        onChange={onChange}
-        className="ml-2 rounded bg-rose-900/50 p-1 text-white font-thin text-lg w-full focus:outline-none focus:ring-2 focus:ring-rose-400"
-      />
-    ) : (
-      <p className="text-xl pl-2 text-white font-thin">{value || "Add"}</p>
-    )}
-  </div>
-);
-
 export function Modal({ onClose }) {
-  const [edit, setEdit] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
-  // Start with empty strings to prevent errors before the data loads
+  // 1. Single unified state tracking identity details
   const [userData, setUserData] = useState({
+    username: "",
     name: "",
     email: "",
     phone: "",
-    address: "",
   });
 
-  // Pull the data from localStorage when the modal opens
-  // Pull the data from localStorage when the modal opens
+  // 2. Structured address tracking object
+  const [addressData, setAddressData] = useState({
+    street: "",
+    city: "",
+    state: "",
+    zipCode: "",
+  });
+
+  // Pull existing records from localStorage on mount
   useEffect(() => {
     const storedUserString = localStorage.getItem("user");
 
-    // Check that it exists AND is not the literal string "undefined"
     if (storedUserString && storedUserString !== "undefined") {
       try {
         const storedUser = JSON.parse(storedUserString);
 
-        // Format the address object into a readable string if it exists
-        let formattedAddress = "";
-        if (storedUser.address && storedUser.address.street) {
-          formattedAddress = `${storedUser.address.street}, ${storedUser.address.city}, ${storedUser.address.state} ${storedUser.address.zipCode || ""}`;
-        }
-
         setUserData({
+          username: storedUser.username || "",
           name: storedUser.name || "",
           email: storedUser.email || "",
           phone: storedUser.phoneNumber || "",
-          address: formattedAddress,
         });
+
+        if (storedUser.address) {
+          setAddressData({
+            street: storedUser.address.street || "",
+            city: storedUser.address.city || "",
+            state: storedUser.address.state || "",
+            zipCode: storedUser.address.zipCode || "",
+          });
+        }
       } catch (error) {
-        // If the JSON is broken, log the error and clear the bad data so it doesn't crash again
         console.error("Error parsing user data:", error);
-        localStorage.removeItem("user");
       }
     }
   }, []);
 
-  const handleChange = (e) => {
+  // Form Change Handlers
+  const handleUserChange = (e) => {
     const { name, value } = e.target;
-    setUserData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+    setUserData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddressChange = (e) => {
+    const { name, value } = e.target;
+    setAddressData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Format full address for preview card
+  const getFormattedAddress = () => {
+    const { street, city, state, zipCode } = addressData;
+    if (!street && !city) return "Add";
+    return `${street}, ${city}, ${state} ${zipCode}`.trim();
+  };
+
+  // Compile full object back to storage
+  const handleSaveChanges = () => {
+    const updatedUserObj = {
+      username: userData.username,
+      name: userData.name,
+      email: userData.email,
+      phoneNumber: userData.phone,
+      address: {
+        street: addressData.street,
+        city: addressData.city,
+        state: addressData.state,
+        zipCode: addressData.zipCode,
+        country: "USA",
+      },
+    };
+
+    localStorage.setItem("user", JSON.stringify(updatedUserObj));
+    setIsEditing(false);
+
+    // Optional: If you want to force your header component to update immediately
+    // without manual refresh, you can trigger a lightweight storage window event
+    window.dispatchEvent(new Event("storage"));
   };
 
   return (
-    <div className="absolute w-96 bg-rose-800 p-4 rounded-2xl shadow-lg flex gap-2 flex-col mt-2 ml-2 z-50">
-      <div className="flex items-center w-full pb-2">
-        <h1 className="text-2xl text-white font-mono">Profile info</h1>
-        <div className="flex gap-4 justify-end grow">
-          <BsFillPencilFill
-            onClick={() => setEdit(!edit)}
-            className="text-white text-xl cursor-pointer hover:text-gray-200"
-          />
-          <BsFillXCircleFill
-            onClick={onClose}
-            className="text-white text-xl cursor-pointer hover:text-gray-200"
-          />
+    <>
+      {/* SIDE VIEW CARD: Kept in its relative anchor space for quick reading */}
+      <div className="absolute w-96 bg-rose-900 p-4 rounded-2xl shadow-lg flex gap-2 flex-col mt-2 ml-2 z-40">
+        <div className="flex items-center w-full pb-2 border-b border-rose-700">
+          <h1 className="text-2xl text-white font-mono">Profile info</h1>
+          <div className="flex gap-4 justify-end grow">
+            <BsFillPencilFill
+              onClick={() => setIsEditing(true)}
+              className="text-white text-xl cursor-pointer hover:text-rose-300 transition-colors"
+            />
+            <BsFillXCircleFill
+              onClick={onClose}
+              className="text-white text-xl cursor-pointer hover:text-gray-200"
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1.5 mt-2 text-white">
+          <p className="text-lg font-thin">
+            <span className="font-semibold text-sm uppercase w-24 inline-block text-rose-100">
+              Name:
+            </span>{" "}
+            {userData.name || "Add"}
+          </p>
+          <p className="text-lg font-thin">
+            <span className="font-semibold text-sm uppercase w-24 inline-block text-rose-100">
+              Email:
+            </span>{" "}
+            {userData.email || "Add"}
+          </p>
+          <p className="text-lg font-thin">
+            <span className="font-semibold text-sm uppercase w-24 inline-block text-rose-100">
+              Phone:
+            </span>{" "}
+            {userData.phone || "Add"}
+          </p>
+          <p className="text-lg font-thin truncate">
+            <span className="font-semibold text-sm uppercase w-24 inline-block text-rose-100">
+              Address:
+            </span>{" "}
+            {getFormattedAddress()}
+          </p>
         </div>
       </div>
 
-      {/* Updated to match your database schema */}
-      <ProfileField
-        label="Name"
-        name="name"
-        value={userData.name}
-        edit={edit}
-        onChange={handleChange}
-      />
-      <ProfileField
-        label="Email"
-        name="email"
-        value={userData.email}
-        edit={edit}
-        onChange={handleChange}
-        type="email"
-      />
-      <ProfileField
-        label="Phone"
-        name="phone"
-        value={userData.phone}
-        edit={edit}
-        onChange={handleChange}
-        type="tel"
-      />
-      <ProfileField
-        label="Address"
-        name="address"
-        value={userData.address}
-        edit={edit}
-        onChange={handleChange}
-      />
-    </div>
+      {/* CENTERED EDIT MODAL POP-UP OVERLAY */}
+      {isEditing && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+          <div className="bg-rose-900 p-6 rounded-2xl shadow-2xl border border-rose-700 w-full max-w-lg flex flex-col gap-4 max-h-[95vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex justify-between items-center border-b border-rose-800 pb-3">
+              <h2 className="text-2xl text-white font-mono font-bold">
+                Edit Profile Dashboard
+              </h2>
+              <BsFillXCircleFill
+                onClick={() => setIsEditing(false)}
+                className="text-white text-xl cursor-pointer hover:text-gray-300"
+              />
+            </div>
+
+            <div className="flex flex-col gap-4">
+              {/* Account Core Profile Fields */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-rose-300 tracking-wider uppercase block mb-1">
+                    Username
+                  </label>
+                  <input
+                    name="username"
+                    value={userData.username}
+                    onChange={handleUserChange}
+                    className="w-full rounded-xl bg-rose-950/60 p-2 text-white outline-none focus:ring-2 focus:ring-rose-400"
+                    type="text"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-rose-300 tracking-wider uppercase block mb-1">
+                    Full Name
+                  </label>
+                  <input
+                    name="name"
+                    value={userData.name}
+                    onChange={handleUserChange}
+                    className="w-full rounded-xl bg-rose-950/60 p-2 text-white outline-none focus:ring-2 focus:ring-rose-400"
+                    type="text"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-rose-300 tracking-wider uppercase block mb-1">
+                    Email Address
+                  </label>
+                  <input
+                    name="email"
+                    value={userData.email}
+                    onChange={handleUserChange}
+                    className="w-full rounded-xl bg-rose-950/60 p-2 text-white outline-none focus:ring-2 focus:ring-rose-400"
+                    type="email"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-rose-300 tracking-wider uppercase block mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    name="phone"
+                    value={userData.phone}
+                    onChange={handleUserChange}
+                    className="w-full rounded-xl bg-rose-950/60 p-2 text-white outline-none focus:ring-2 focus:ring-rose-400"
+                    type="tel"
+                  />
+                </div>
+              </div>
+
+              <hr className="border-rose-800/60 my-1" />
+
+              {/* Explicit Address Object Mapping Group */}
+              <h3 className="text-md font-mono font-semibold text-rose-200 -mb-1">
+                Mailing Address Object
+              </h3>
+
+              <div>
+                <label className="text-xs font-bold text-rose-300 tracking-wider uppercase block mb-1">
+                  Street Location
+                </label>
+                <input
+                  name="street"
+                  value={addressData.street}
+                  onChange={handleAddressChange}
+                  className="w-full rounded-xl bg-rose-950/60 p-2 text-white outline-none focus:ring-2 focus:ring-rose-400"
+                  type="text"
+                  placeholder="123 Main St"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div className="col-span-1.5">
+                  <label className="text-xs font-bold text-rose-300 tracking-wider uppercase block mb-1">
+                    City
+                  </label>
+                  <input
+                    name="city"
+                    value={addressData.city}
+                    onChange={handleAddressChange}
+                    className="w-full rounded-xl bg-rose-950/60 p-2 text-white outline-none focus:ring-2 focus:ring-rose-400"
+                    type="text"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-rose-300 tracking-wider uppercase block mb-1">
+                    State
+                  </label>
+                  <input
+                    name="state"
+                    value={addressData.state}
+                    onChange={handleAddressChange}
+                    className="w-full rounded-xl bg-rose-950/60 p-2 text-white outline-none focus:ring-2 focus:ring-rose-400"
+                    type="text"
+                    placeholder="UT"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-rose-300 tracking-wider uppercase block mb-1">
+                    Zip Code
+                  </label>
+                  <input
+                    name="zipCode"
+                    value={addressData.zipCode}
+                    onChange={handleAddressChange}
+                    className="w-full rounded-xl bg-rose-950/60 p-2 text-white outline-none focus:ring-2 focus:ring-rose-400"
+                    type="text"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Save Controls Action */}
+            <div className="flex gap-3 justify-end mt-4 pt-3 border-t border-rose-800">
+              <button
+                onClick={() => setIsEditing(false)}
+                type="button"
+                className="px-4 py-2 rounded-xl text-rose-200 hover:bg-rose-950/40 text-sm font-medium transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveChanges}
+                type="button"
+                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-xl transition-colors shadow-lg cursor-pointer"
+              >
+                Save Profile Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
