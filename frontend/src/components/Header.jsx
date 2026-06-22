@@ -34,25 +34,38 @@ export function Header() {
   };
 
   return (
-    <div className="relative">
-      <header className="flex justify-between items-center bg-white dark:bg-neutral-900 p-4 transition-colors shadow-sm dark:shadow-none border-b dark:border-neutral-800">
-        <h1
-          onClick={() => setShowModal(!showModal)}
-          className="text-2xl font-bold text-neutral-900 dark:text-white cursor-pointer select-none bg-gray-100 dark:bg-neutral-800 px-6 py-2 rounded-xl hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors"
-        >
-          {userName}
-        </h1>
-        <div className="flex items-center gap-4">
-          <ThemeToggle />
-          <button
-            onClick={handleLogout}
-            className="text-white bg-rose-800 px-4 py-2 rounded-xl hover:bg-rose-700 cursor-pointer font-semibold"
+    <div>
+      <div className="relative">
+        <header className="flex justify-between items-center bg-white dark:bg-neutral-900 p-3 px-4 transition-colors shadow-sm dark:shadow-none border-b dark:border-neutral-800">
+          <h1
+            onClick={() => setShowModal(!showModal)}
+            className="text-2xl font-bold text-neutral-900 dark:text-white cursor-pointer select-none bg-gray-100 dark:bg-neutral-800 px-6 py-2 rounded-xl hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors"
           >
-            Logout
-          </button>
-        </div>
-      </header>
-      {showModal && <Modal onClose={() => setShowModal(false)} />}
+            {userName}
+          </h1>
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            <button
+              onClick={handleLogout}
+              className="text-white bg-rose-800 px-4 py-2 rounded-xl hover:bg-rose-700 cursor-pointer font-semibold"
+            >
+              Logout
+            </button>
+          </div>
+        </header>
+        {showModal && <Modal onClose={() => setShowModal(false)} />}
+      </div>
+      <div class="p-3 flex gap-2">
+        <a className="bg-olive-800 p-1 px-4 rounded-2xl text-lg hover:bg-olive-700/50 hover:shadow-lg cursor-pointer transition-all duration-200">
+          Dashboard
+        </a>
+        <a className="bg-olive-800 p-1 px-4 rounded-2xl text-lg hover:bg-olive-700/50 hover:shadow-lg cursor-pointer transition-all duration-200">
+          Sign Up
+        </a>
+        <a className="bg-olive-800 p-1 px-4 rounded-2xl text-lg hover:bg-olive-700/50 hover:shadow-lg cursor-pointer transition-all duration-200">
+          Admin Control
+        </a>
+      </div>
     </div>
   );
 }
