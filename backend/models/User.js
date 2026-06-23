@@ -28,6 +28,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false, // Defaults to false for normal users
     },
+    fullP: {
+      type: Boolean,
+      default: false, // Defaults to false for normal users
+    },
     address: {
       street: { type: String, trim: true },
       city: { type: String, trim: true },
