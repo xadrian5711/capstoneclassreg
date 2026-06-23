@@ -17,6 +17,10 @@ router.post("/signup", async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ error: "Email already in use." });
     }
+    const existingName = await User.findOne({ username });
+    if (existingName) {
+      return res.status(400).json({ error: "username already in use." });
+    }
 
     let isUserAdmin = false;
     if (adminCode === process.env.ADMIN_SECRET) {
@@ -118,23 +122,55 @@ router.put("/update", async (req, res) => {
   try {
     const { userId, username, name, email, phone, address } = req.body;
 
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      {
-        username,
-        name,
-        email,
-        phoneNumber: phone,
-        address: {
-          street: address.street,
-          city: address.city,
-          state: address.state,
-          zipCode: address.zipCode,
-          country: "USA",
-        },
-      },
-      { new: true },
+    // --- START: VALIDATION ---
+    // Check if the new username is already taken by another user
+    const existingUsername = await User.findOne({
+      username: username,
+      _id: { $ne: userId }, // $ne means "not equal"
+    });
+    if (existingUsername) {
+      return res.status(400).json({ error: "Username is already in use." });
+    }
+
+    // Check if the new email is already taken by another user
+    const existingEmail = await User.findOne({
+      email: email,
+      _id: { $ne: userId },
+    });
+    if (existingEmail) {
+      return res.status(400).json({ error: "Email is already in use." });
+    }
+    // --- END: VALIDATION ---
+
+    // 1. Determine if the profile is now complete
+    const isProfileComplete = !!(
+      name &&
+      phone &&
+      address?.street &&
+      address?.city &&
+      address?.state &&
+      address?.zipCode
     );
+
+    // 2. Construct the update payload
+    const updateData = {
+      username,
+      name,
+      email,
+      phoneNumber: phone,
+      address: {
+        street: address.street,
+        city: address.city,
+        state: address.state,
+        zipCode: address.zipCode,
+        country: "USA",
+      },
+      fullP: isProfileComplete, // 3. Set the fullP flag
+    };
+
+    const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
+      new: true,
+    });
 
     if (!updatedUser) {
       return res.status(404).json({ error: "User not found." });
@@ -148,6 +184,7 @@ router.put("/update", async (req, res) => {
         name: updatedUser.name,
         email: updatedUser.email,
         isAdmin: updatedUser.isAdmin,
+        fullP: updatedUser.fullP, // 4. Return the new fullP status
         phoneNumber: updatedUser.phoneNumber,
         address: updatedUser.address,
       },

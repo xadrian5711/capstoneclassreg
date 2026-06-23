@@ -4,6 +4,7 @@ import { BsFillPencilFill, BsFillXCircleFill } from "react-icons/bs";
 export function Modal({ onClose }) {
   const [isEditing, setIsEditing] = useState(false);
   const [userId, setUserId] = useState(""); // <-- ADDED: Track user ID for DB queries
+  const [errorMsg, setErrorMsg] = useState(""); // State for error messages
 
   const [userData, setUserData] = useState({
     username: "",
@@ -66,6 +67,7 @@ export function Modal({ onClose }) {
 
   // FIXED: Turned into an async function that communicates with MongoDB
   const handleSaveChanges = async () => {
+    setErrorMsg(""); // Clear previous errors
     const payload = {
       userId: userId, // Tells the backend exactly who is updating
       username: userData.username,
@@ -99,13 +101,13 @@ export function Modal({ onClose }) {
         // 3. Inform the rest of the application (like the Header component) to re-render
         window.dispatchEvent(new Event("storage"));
 
-        alert("Profile saved to database successfully!");
+        // alert("Profile saved to database successfully!"); // Optional: Can be removed for a smoother UX
       } else {
-        alert(data.error || "Failed to update profile on the server.");
+        setErrorMsg(data.error || "Failed to update profile.");
       }
     } catch (error) {
       console.error("Network error:", error);
-      alert("Could not connect to the server.");
+      setErrorMsg("Could not connect to the server.");
     }
   };
 
@@ -168,6 +170,13 @@ export function Modal({ onClose }) {
                 className="text-white text-xl cursor-pointer hover:text-gray-300"
               />
             </div>
+
+            {/* Display Error Message */}
+            {errorMsg && (
+              <p className="text-red-400 bg-red-950/50 p-3 rounded-lg text-center -mb-1">
+                {errorMsg}
+              </p>
+            )}
 
             <div className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-3">
