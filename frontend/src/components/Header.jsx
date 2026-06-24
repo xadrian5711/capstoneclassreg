@@ -37,6 +37,20 @@ export function Header() {
     }
   };
 
+  const isAdmin = () => {
+    const storedUserString = localStorage.getItem("user");
+    if (!storedUserString || storedUserString === "undefined") {
+      return false;
+    }
+    try {
+      const parsedUser = JSON.parse(storedUserString);
+      return parsedUser.isAdmin === true; // Explicitly check for true
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const admin = isAdmin();
   const userName = getUsername();
 
   const handleLogout = () => {
@@ -75,9 +89,11 @@ export function Header() {
         <NavLink to="/signup" className={linkStyles}>
           Sign Up
         </NavLink>
-        <NavLink to="/admin" className={linkStyles}>
-          Admin Control
-        </NavLink>
+        {admin && (
+          <NavLink to="/admin" className={linkStyles}>
+            Admin Control
+          </NavLink>
+        )}
       </div>
     </div>
   );
