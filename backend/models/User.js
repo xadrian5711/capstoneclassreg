@@ -44,6 +44,12 @@ const userSchema = new mongoose.Schema(
       minlength: 10,
       maxlength: 10,
     },
+    schedule: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Course", // This must match the model name you used for your courses!
+      },
+    ],
   },
   { timestamps: true },
 );

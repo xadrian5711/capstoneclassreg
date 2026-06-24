@@ -8,6 +8,7 @@ import cookieParser from "cookie-parser"; // FIXED: Changed from require to impo
 import { applyPassportStrategy } from "./config/passport.js";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
+import courseRoutes from "./routes/courseRoutes.js";
 
 // (Leave these commented out until you actually build them)
 // import studentRoutes from "./routes/studentRoutes.js";
@@ -33,8 +34,8 @@ app.use(passport.initialize());
 applyPassportStrategy(passport);
 
 // 5. Routes
-app.use("/api/auth", authRoutes); // <-- UNCOMMENTED THIS
-
+app.use("/api/auth", authRoutes);
+app.use("/api/courses", courseRoutes);
 // (Leave these commented out until you actually build them)
 // app.use("/api/students", studentRoutes);
 // app.use("/api/admin", adminRoutes);
