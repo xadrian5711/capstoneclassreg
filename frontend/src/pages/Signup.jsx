@@ -37,7 +37,7 @@ const fakeClasses = [
 
 export function Signup() {
   return (
-    <div className="flex flex-col items-center flex-1 w-full bg-gray-50 dark:bg-neutral-950/90 transition-colors duration-300">
+    <div className="flex flex-col items-center flex-1 w-full bg-gray-50 dark:bg-neutral-950/90 px-8 transition-colors duration-300">
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white my-2 transition-colors duration-300">
         Select the classes u want to take!
       </h1>

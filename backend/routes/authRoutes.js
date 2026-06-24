@@ -2,6 +2,7 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import bcrypt from "bcrypt";
+import passport from "passport"; // <-- Import passport
 
 const { TokenExpiredError } = jwt;
 const router = express.Router();
@@ -126,99 +127,103 @@ router.post("/login", async (req, res) => {
 // ==========================================
 // 3. FIXED: ROUTE: PUT /api/auth/update (Now standalone!)
 // ==========================================
-router.put("/update", protect, async (req, res) => {
-  // FIXED: Added protect middleware
-  try {
-    const userId = req.userId; // FIXED: Pulled safely directly from verified token token data
-    const { username, name, email, phone, address } = req.body;
+router.put(
+  "/update",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res) => {
+    try {
+      const userId = req.user._id; // <-- Pull the ID straight from Passport's verified user object
+      const { username, name, email, phone, address } = req.body;
 
-    const existingUsername = await User.findOne({
-      username,
-      _id: { $ne: userId },
-    });
-    if (existingUsername)
-      return res.status(400).json({ error: "Username is already in use." });
+      const existingUsername = await User.findOne({
+        username,
+        _id: { $ne: userId },
+      });
+      if (existingUsername)
+        return res.status(400).json({ error: "Username is already in use." });
 
-    const existingEmail = await User.findOne({ email, _id: { $ne: userId } });
-    if (existingEmail)
-      return res.status(400).json({ error: "Email is already in use." });
+      const existingEmail = await User.findOne({ email, _id: { $ne: userId } });
+      if (existingEmail)
+        return res.status(400).json({ error: "Email is already in use." });
 
-    const isProfileComplete = !!(
-      name &&
-      phone &&
-      address?.street &&
-      address?.city &&
-      address?.state &&
-      address?.zipCode
-    );
+      const isProfileComplete = !!(
+        name &&
+        phone &&
+        address?.street &&
+        address?.city &&
+        address?.state &&
+        address?.zipCode
+      );
 
-    const updateData = {
-      username,
-      name,
-      email,
-      phoneNumber: phone,
-      address: {
-        street: address.street,
-        city: address.city,
-        state: address.state,
-        zipCode: address.zipCode,
-        country: "USA",
-      },
-      fullP: isProfileComplete,
-    };
+      const updateData = {
+        username,
+        name,
+        email,
+        phoneNumber: phone,
+        address: {
+          street: address.street,
+          city: address.city,
+          state: address.state,
+          zipCode: address.zipCode,
+          country: "USA",
+        },
+        fullP: isProfileComplete,
+      };
 
-    const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
-      new: true,
-    });
-    if (!updatedUser) return res.status(404).json({ error: "User not found." });
+      const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
+        new: true,
+      });
+      if (!updatedUser)
+        return res.status(404).json({ error: "User not found." });
 
-    res.status(200).json({
-      message: "Profile updated successfully!",
-      user: {
-        id: updatedUser._id,
-        username: updatedUser.username,
-        name: updatedUser.name,
-        email: updatedUser.email,
-        isAdmin: updatedUser.isAdmin,
-        fullP: updatedUser.fullP,
-        phoneNumber: updatedUser.phoneNumber,
-        address: updatedUser.address,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({ error: "Server error. Failed to update profile." });
-  }
-});
+      res.status(200).json({
+        message: "Profile updated successfully!",
+        user: {
+          id: updatedUser._id,
+          username: updatedUser.username,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          isAdmin: updatedUser.isAdmin,
+          fullP: updatedUser.fullP,
+          phoneNumber: updatedUser.phoneNumber,
+          address: updatedUser.address,
+        },
+      });
+    } catch (error) {
+      res
+        .status(500)
+        .json({ error: "Server error. Failed to update profile." });
+    }
+  },
+);
 
 // ... keeping all your signup, login, and update routes exactly as they are ...
 
 // ==========================================
 // 4. ROUTE: GET /api/auth/me (Verifies token & returns real DB data)
 // ==========================================
-router.get("/me", protect, async (req, res) => {
-  try {
-    // req.userId was safely extracted from the secure cookie by the 'protect' middleware
-    const user = await User.findById(req.userId).select("-password");
+router.get(
+  "/me",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res) => {
+    try {
+      // Passport already verified the token and found the user! It lives in req.user
+      const user = req.user;
 
-    if (!user) {
-      return res.status(404).json({ error: "User not found." });
+      res.status(200).json({
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          isAdmin: user.isAdmin,
+          phoneNumber: user.phoneNumber,
+          address: user.address,
+        },
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Server error validating session." });
     }
-
-    // Send back the absolute source of truth from MongoDB
-    res.status(200).json({
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        isAdmin: user.isAdmin,
-        phoneNumber: user.phoneNumber,
-        address: user.address,
-      },
-    });
-  } catch (error) {
-    console.error("Session verification error:", error);
-    res.status(500).json({ error: "Server error validating session." });
-  }
-});
+  },
+);
 
 export default router;
