@@ -1,7 +1,7 @@
 import express from "express";
 import passport from "passport";
-import User from "..models/Users.js";
-import Course from "../models/Courses";
+import User from "../models/User.js";
+import Course from "../models/Courses.js";
 
 const router = express.Router();
 const protect = passport.authenticate("jwt", { session: false });
