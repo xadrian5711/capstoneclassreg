@@ -46,6 +46,7 @@ export function Signup() {
       const response = await fetch(
         "http://localhost:3002/api/auth/add-course",
         {
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
           },

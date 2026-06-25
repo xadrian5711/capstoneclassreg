@@ -8,7 +8,7 @@ export function Home() {
   useEffect(() => {
     const fetchMySchedule = async () => {
       try {
-        // Fetch from the new route you just made in Express!
+        // 🚨 FIXED URL: changed 'add-course' to 'my-schedule'
         const response = await fetch(
           "http://localhost:3002/api/auth/my-schedule",
           {
