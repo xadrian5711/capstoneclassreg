@@ -6,41 +6,40 @@ import Course from "../models/Courses.js";
 const router = express.Router();
 const protect = passport.authenticate("jwt", { session: false });
 
-router.post(
-  "/schedule",
-  protect,
-  async (requestAnimationFrame, resizeBy, next) => {
-    try {
-      const { courseId } = req.body;
-      const userId = req.user._id; // Securely provided by Passport from the cookie payload
+router.post("/schedule", protect, async (req, res, next) => {
+  // ✅ CORRECTED
+  try {
+    const { courseId } = req.body;
+    const userId = req.user._id;
 
-      // 1. Verify that the class actually exists in MongoDB
-      const course = await Course.findById(courseId);
-      if (!course) {
-        return res.status(404).json({ error: "Course not found." });
-      } // 2. Grab the student document
-      const student = await User.findById(userId);
+    // ... rest of your code ...
 
-      // 3. Prevent duplicate selections
-      if (student.schedule.includes(courseId)) {
-        return res
-          .status(400)
-          .json({ error: "This course is already in your schedule." });
-      }
+    // 1. Verify that the class actually exists in MongoDB
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ error: "Course not found." });
+    } // 2. Grab the student document
+    const student = await User.findById(userId);
 
-      // 4. Push the course ID into the schedule array and save
-      student.schedule.push(courseId);
-      await student.save();
-
-      res.status(200).json({
-        message: `Successfully registered for ${course.title || "the course"}!`,
-        schedule: student.schedule,
-      });
-    } catch (error) {
-      next(error); // Forwards any database glitches to your global server error handler
+    // 3. Prevent duplicate selections
+    if (student.schedule.includes(courseId)) {
+      return res
+        .status(400)
+        .json({ error: "This course is already in your schedule." });
     }
-  },
-);
+
+    // 4. Push the course ID into the schedule array and save
+    student.schedule.push(courseId);
+    await student.save();
+
+    res.status(200).json({
+      message: `Successfully registered for ${course.title || "the course"}!`,
+      schedule: student.schedule,
+    });
+  } catch (error) {
+    next(error); // Forwards any database glitches to your global server error handler
+  }
+});
 router.get("/schedule", protect, async (req, res, next) => {
   try {
     // .populate("schedule") swaps raw ObjectIds for the actual course titles and details
