@@ -11,8 +11,8 @@ import authRoutes from "./routes/authRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
 
 // (Leave these commented out until you actually build them)
-// import studentRoutes from "./routes/studentRoutes.js";
-// import adminRoutes from "./routes/adminRoutes.js";
+import studentRoutes from "./routes/studentRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 
 // 2. Initialize App
 const app = express();
@@ -37,8 +37,8 @@ applyPassportStrategy(passport);
 app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
 // (Leave these commented out until you actually build them)
-// app.use("/api/students", studentRoutes);
-// app.use("/api/admin", adminRoutes);
+app.use("/api/students", studentRoutes);
+app.use("/api/admin", adminRoutes);
 
 // 6. Error Handling Middleware
 app.use((err, req, res, next) => {

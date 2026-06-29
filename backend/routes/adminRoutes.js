@@ -58,7 +58,7 @@ router.get("/users/:id", async (req, res, next) => {
 router.put("/users/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { username, name, email, phone, address } = req.body;
+    const { username, name, email, phone, address, schedule } = req.body;
 
     // Fetch the user document first to make safe, conditional updates
     const user = await User.findById(id);
@@ -104,12 +104,15 @@ router.put("/users/:id", async (req, res, next) => {
       user.address?.state &&
       user.address?.zipCode
     );
+    if (schedule !== undefined) {
+      user.schedule = schedule;
+    }
+    await user.save();
 
-    const updatedUser = await user.save();
-
-    // Create a safe response object removing sensitive information
-    const userResponse = updatedUser.toObject();
-    delete userResponse.password;
+    // Re-fetch the user with the schedule populated to send back to the client
+    const userResponse = await User.findById(id)
+      .select("-password")
+      .populate("schedule");
 
     res.status(200).json({
       message: "User profile updated administratively.",
@@ -157,3 +160,34 @@ router.patch("/users/:id/role", async (req, res, next) => {
     next(error);
   }
 });
+
+// ============================================================
+// ROUTE 5: DELETE /api/admin/users/:userId/schedule/:courseId
+// DESCRIPTION: Administratively remove a course from a user's schedule
+// ============================================================
+router.delete("/users/:userId/schedule/:courseId", async (req, res, next) => {
+  try {
+    const { userId, courseId } = req.params;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    // Use Mongoose .pull() to remove the courseId from the schedule array
+    user.schedule.pull(courseId);
+    await user.save();
+
+    // We need to send back the updated user with a populated schedule
+    const updatedUser = await User.findById(userId).populate("schedule");
+
+    res.status(200).json({
+      message: "Course dropped successfully from user's schedule.",
+      user: updatedUser,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+export default router;
