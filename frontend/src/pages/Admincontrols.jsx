@@ -111,7 +111,7 @@ export function Admincontrols() {
           username: selectedUser.username,
           name: selectedUser.name,
           email: selectedUser.email,
-          phone: selectedUser.phoneNumber,
+          phone: selectedUser.phoneNumber, // Corrected from 'phone'
           address: selectedUser.address, // Now passing full address object!
         }),
       });

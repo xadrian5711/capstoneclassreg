@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Modal } from "./Modal.jsx";
 import ThemeToggle from "./ThemeToggle.jsx";
 import { useNavigate, NavLink } from "react-router-dom";
 
 export function Header() {
+  const [user, setUser] = useState(null);
   const linkStyles = ({ isActive }) => {
     const baseStyles =
       "p-1 px-4 rounded-2xl text-lg transition-all duration-200 cursor-pointer";
@@ -20,38 +21,36 @@ export function Header() {
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
 
-  // 1. Safely grab the full user object and parse out the username
-  const getUsername = () => {
-    const storedUserString = localStorage.getItem("user");
+  useEffect(() => {
+    const updateUserState = () => {
+      const storedUserString = localStorage.getItem("user");
+      if (storedUserString && storedUserString !== "undefined") {
+        try {
+          setUser(JSON.parse(storedUserString));
+        } catch {
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
+    };
 
-    // Protect against empty storage or the literal "undefined" string
-    if (!storedUserString || storedUserString === "undefined") {
-      return "User";
-    }
+    updateUserState(); // Initial load
 
-    try {
-      const parsedUser = JSON.parse(storedUserString);
-      return parsedUser.username || "User"; // Returns the username
-    } catch (error) {
-      return "User";
-    }
-  };
+    // Listen for the custom event from the Modal
+    const handleProfileUpdate = (event) => {
+      localStorage.setItem("user", JSON.stringify(event.detail));
+      updateUserState();
+    };
 
-  const isAdmin = () => {
-    const storedUserString = localStorage.getItem("user");
-    if (!storedUserString || storedUserString === "undefined") {
-      return false;
-    }
-    try {
-      const parsedUser = JSON.parse(storedUserString);
-      return parsedUser.isAdmin === true; // Explicitly check for true
-    } catch (error) {
-      return false;
-    }
-  };
-
-  const admin = isAdmin();
-  const userName = getUsername();
+    window.addEventListener("userProfileUpdated", handleProfileUpdate);
+    // Also listen for the 'storage' event for cross-tab consistency
+    window.addEventListener("storage", updateUserState);
+    return () => {
+      window.removeEventListener("userProfileUpdated", handleProfileUpdate);
+      window.removeEventListener("storage", updateUserState);
+    };
+  }, []);
 
   const handleLogout = () => {
     // 2. FIXED: Clear the "user" object from storage instead of "userName"
@@ -68,7 +67,7 @@ export function Header() {
             onClick={() => setShowModal(!showModal)}
             className="text-2xl font-bold text-neutral-900 dark:text-white cursor-pointer select-none bg-gray-100 dark:bg-neutral-800 px-6 py-2 rounded-xl hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors"
           >
-            {userName}
+            {user?.username || "User"}
           </h1>
           <div className="flex items-center gap-4">
             <ThemeToggle />
@@ -89,7 +88,7 @@ export function Header() {
         <NavLink to="/signup" className={linkStyles}>
           Sign Up
         </NavLink>
-        {admin && (
+        {user?.isAdmin && (
           <NavLink to="/admin" className={linkStyles}>
             Admin Control
           </NavLink>

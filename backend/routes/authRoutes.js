@@ -97,6 +97,7 @@ router.post("/login", async (req, res) => {
       user: {
         id: user._id,
         username: user.username,
+        name: user.name, // <--- ADD THIS LINE
         email: user.email,
         isAdmin: user.isAdmin,
         phoneNumber: user.phoneNumber,
@@ -198,6 +199,7 @@ router.get(
         user: {
           id: user._id,
           username: user.username,
+          name: user.name, // <--- ADD THIS LINE
           email: user.email,
           isAdmin: user.isAdmin,
           phoneNumber: user.phoneNumber,

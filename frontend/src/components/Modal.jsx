@@ -27,7 +27,7 @@ export function Modal({ onClose }) {
       try {
         const storedUser = JSON.parse(storedUserString);
 
-        setUserId(storedUser.id || ""); // <-- ADDED: Extract and save the user ID
+        setUserId(storedUser.id || "");
         setUserData({
           username: storedUser.username || "",
           name: storedUser.name || "",
@@ -47,7 +47,7 @@ export function Modal({ onClose }) {
         console.error("Error parsing user data:", error);
       }
     }
-  }, []);
+  }, [isEditing]); // Reruns when isEditing changes to get fresh data for the form
 
   const handleUserChange = (e) => {
     const { name, value } = e.target;
@@ -74,7 +74,7 @@ export function Modal({ onClose }) {
       username: userData.username,
       name: userData.name,
       email: userData.email,
-      phone: userData.phone,
+      phone: userData.phone, // This should be phoneNumber to match the backend schema
       address: {
         street: addressData.street,
         city: addressData.city,
@@ -94,16 +94,11 @@ export function Modal({ onClose }) {
       const data = await response.json();
 
       if (response.ok) {
-        // 1. Overwrite localStorage with the clean, verified data back from MongoDB
-        localStorage.setItem("user", JSON.stringify(data.user));
-
-        // 2. Close the editor panel
+        // Dispatch a custom event to notify other components (like the Header)
+        window.dispatchEvent(
+          new CustomEvent("userProfileUpdated", { detail: data.user }),
+        );
         setIsEditing(false);
-
-        // 3. Inform the rest of the application (like the Header component) to re-render
-        window.dispatchEvent(new Event("storage"));
-
-        // alert("Profile saved to database successfully!"); // Optional: Can be removed for a smoother UX
       } else {
         setErrorMsg(data.error || "Failed to update profile.");
       }
@@ -161,157 +156,156 @@ export function Modal({ onClose }) {
 
       {/* CENTERED EDIT MODAL POP-UP OVERLAY */}
       {isEditing && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-          <div className="bg-rose-900 p-6 rounded-2xl shadow-2xl border border-rose-700 w-full max-w-lg flex flex-col gap-4 max-h-[95vh] overflow-y-auto">
-            <div className="flex justify-between items-center border-b border-rose-800 pb-3">
-              <h2 className="text-2xl text-white font-mono font-bold">
-                Edit Profile Dashboard
-              </h2>
+        <div className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-rose-900 rounded-3xl p-8 w-full max-w-2xl shadow-2xl border border-rose-800 transition-colors max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold mb-6 text-white flex justify-between items-center">
+              <span>Edit Profile Dashboard</span>
               <BsFillXCircleFill
                 onClick={() => setIsEditing(false)}
-                className="text-white text-xl cursor-pointer hover:text-gray-300"
+                className="text-rose-300 text-2xl cursor-pointer hover:text-white transition-colors"
               />
-            </div>
+            </h2>
 
             {/* Display Error Message */}
             {errorMsg && (
-              <p className="text-red-400 bg-red-950/50 p-3 rounded-lg text-center -mb-1">
+              <p className="text-red-300 bg-red-950/50 p-3 rounded-xl text-center font-semibold">
                 {errorMsg}
               </p>
             )}
 
-            <div className="flex flex-col gap-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-rose-300 tracking-wider uppercase block mb-1">
-                    Username
-                  </label>
-                  <input
-                    name="username"
-                    value={userData.username}
-                    onChange={handleUserChange}
-                    className="w-full rounded-xl bg-rose-950/60 p-2 text-white outline-none focus:ring-2 focus:ring-rose-400"
-                    type="text"
-                  />
+            <form onSubmit={handleSaveChanges} className="flex flex-col gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Basic Info */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold text-rose-300 border-b border-rose-800 pb-2">
+                    Basic Info
+                  </h3>
+                  <div>
+                    <label className="block text-sm font-semibold mb-1 text-rose-200">
+                      Username
+                    </label>
+                    <input
+                      name="username"
+                      value={userData.username}
+                      onChange={handleUserChange}
+                      className="w-full bg-rose-950/60 border border-rose-800 rounded-xl p-2.5 text-white focus:ring-2 focus:ring-rose-400 transition-all outline-none"
+                      type="text"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-1 text-rose-200">
+                      Full Name
+                    </label>
+                    <input
+                      name="name"
+                      value={userData.name}
+                      onChange={handleUserChange}
+                      className="w-full bg-rose-950/60 border border-rose-800 rounded-xl p-2.5 text-white focus:ring-2 focus:ring-rose-400 transition-all outline-none"
+                      type="text"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-1 text-rose-200">
+                      Email Address
+                    </label>
+                    <input
+                      name="email"
+                      value={userData.email}
+                      onChange={handleUserChange}
+                      className="w-full bg-rose-950/60 border border-rose-800 rounded-xl p-2.5 text-white focus:ring-2 focus:ring-rose-400 transition-all outline-none"
+                      type="email"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-1 text-rose-200">
+                      Phone Number
+                    </label>
+                    <input
+                      name="phone"
+                      value={userData.phone}
+                      onChange={handleUserChange}
+                      className="w-full bg-rose-950/60 border border-rose-800 rounded-xl p-2.5 text-white focus:ring-2 focus:ring-rose-400 transition-all outline-none"
+                      type="tel"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="text-xs font-bold text-rose-300 tracking-wider uppercase block mb-1">
-                    Full Name
-                  </label>
-                  <input
-                    name="name"
-                    value={userData.name}
-                    onChange={handleUserChange}
-                    className="w-full rounded-xl bg-rose-950/60 p-2 text-white outline-none focus:ring-2 focus:ring-rose-400"
-                    type="text"
-                  />
+
+                {/* Address Info */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold text-rose-300 border-b border-rose-800 pb-2">
+                    Address
+                  </h3>
+                  <div>
+                    <label className="block text-sm font-semibold mb-1 text-rose-200">
+                      Street
+                    </label>
+                    <input
+                      name="street"
+                      value={addressData.street}
+                      onChange={handleAddressChange}
+                      className="w-full bg-rose-950/60 border border-rose-800 rounded-xl p-2.5 text-white focus:ring-2 focus:ring-rose-400 transition-all outline-none"
+                      type="text"
+                      placeholder="123 Main St"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold mb-1 text-rose-200">
+                        City
+                      </label>
+                      <input
+                        name="city"
+                        value={addressData.city}
+                        onChange={handleAddressChange}
+                        className="w-full bg-rose-950/60 border border-rose-800 rounded-xl p-2.5 text-white focus:ring-2 focus:ring-rose-400 transition-all outline-none"
+                        type="text"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1 text-rose-200">
+                        State
+                      </label>
+                      <input
+                        name="state"
+                        value={addressData.state}
+                        onChange={handleAddressChange}
+                        className="w-full bg-rose-950/60 border border-rose-800 rounded-xl p-2.5 text-white focus:ring-2 focus:ring-rose-400 transition-all outline-none"
+                        type="text"
+                        placeholder="UT"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-1 text-rose-200">
+                      Zip Code
+                    </label>
+                    <input
+                      name="zipCode"
+                      value={addressData.zipCode}
+                      onChange={handleAddressChange}
+                      className="w-full bg-rose-950/60 border border-rose-800 rounded-xl p-2.5 text-white focus:ring-2 focus:ring-rose-400 transition-all outline-none"
+                      type="text"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-rose-300 tracking-wider uppercase block mb-1">
-                    Email Address
-                  </label>
-                  <input
-                    name="email"
-                    value={userData.email}
-                    onChange={handleUserChange}
-                    className="w-full rounded-xl bg-rose-950/60 p-2 text-white outline-none focus:ring-2 focus:ring-rose-400"
-                    type="email"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-rose-300 tracking-wider uppercase block mb-1">
-                    Phone Number
-                  </label>
-                  <input
-                    name="phone"
-                    value={userData.phone}
-                    onChange={handleUserChange}
-                    className="w-full rounded-xl bg-rose-950/60 p-2 text-white outline-none focus:ring-2 focus:ring-rose-400"
-                    type="tel"
-                  />
-                </div>
+              <div className="flex gap-3 mt-6 pt-4 border-t border-rose-800">
+                <button
+                  type="submit"
+                  className="flex-1 bg-emerald-600 text-white px-4 py-3 rounded-xl hover:bg-emerald-700 font-bold transition-colors shadow-md cursor-pointer"
+                >
+                  Save Changes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  className="flex-1 bg-rose-800 text-rose-200 hover:bg-rose-700 px-4 py-3 rounded-xl font-bold transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
               </div>
-
-              <hr className="border-rose-800/60 my-1" />
-
-              <h3 className="text-md font-mono font-semibold text-rose-200 -mb-1">
-                Mailing Address Object
-              </h3>
-
-              <div>
-                <label className="text-xs font-bold text-rose-300 tracking-wider uppercase block mb-1">
-                  Street Location
-                </label>
-                <input
-                  name="street"
-                  value={addressData.street}
-                  onChange={handleAddressChange}
-                  className="w-full rounded-xl bg-rose-950/60 p-2 text-white outline-none focus:ring-2 focus:ring-rose-400"
-                  type="text"
-                  placeholder="123 Main St"
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <div className="col-span-1.5">
-                  <label className="text-xs font-bold text-rose-300 tracking-wider uppercase block mb-1">
-                    City
-                  </label>
-                  <input
-                    name="city"
-                    value={addressData.city}
-                    onChange={handleAddressChange}
-                    className="w-full rounded-xl bg-rose-950/60 p-2 text-white outline-none focus:ring-2 focus:ring-rose-400"
-                    type="text"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-rose-300 tracking-wider uppercase block mb-1">
-                    State
-                  </label>
-                  <input
-                    name="state"
-                    value={addressData.state}
-                    onChange={handleAddressChange}
-                    className="w-full rounded-xl bg-rose-950/60 p-2 text-white outline-none focus:ring-2 focus:ring-rose-400"
-                    type="text"
-                    placeholder="UT"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-rose-300 tracking-wider uppercase block mb-1">
-                    Zip Code
-                  </label>
-                  <input
-                    name="zipCode"
-                    value={addressData.zipCode}
-                    onChange={handleAddressChange}
-                    className="w-full rounded-xl bg-rose-950/60 p-2 text-white outline-none focus:ring-2 focus:ring-rose-400"
-                    type="text"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-3 justify-end mt-4 pt-3 border-t border-rose-800">
-              <button
-                onClick={() => setIsEditing(false)}
-                type="button"
-                className="px-4 py-2 rounded-xl text-rose-200 hover:bg-rose-950/40 text-sm font-medium transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveChanges}
-                type="button"
-                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-xl transition-colors shadow-lg cursor-pointer"
-              >
-                Save Profile Changes
-              </button>
-            </div>
+            </form>
           </div>
         </div>
       )}

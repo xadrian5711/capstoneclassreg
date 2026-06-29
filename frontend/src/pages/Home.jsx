@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from "react";
+import { FaChevronDown, FaChevronUp, FaTrash } from "react-icons/fa";
 
 export function Home() {
   const [mySchedule, setMySchedule] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [expandedRow, setExpandedRow] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchMySchedule = async () => {
       try {
-        // 🚨 FIXED URL: changed 'add-course' to 'my-schedule'
         const response = await fetch(
           "http://localhost:3002/api/auth/my-schedule",
           {
@@ -33,51 +35,151 @@ export function Home() {
     fetchMySchedule();
   }, []);
 
+  const toggleRow = (id) => {
+    setExpandedRow(expandedRow === id ? null : id);
+  };
+
+  const handleDropCourse = async (courseId) => {
+    if (!window.confirm("Are you sure you want to drop this course?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:3002/api/student/schedule/${courseId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to drop course.");
+      }
+
+      // Remove the course from the local state to update the UI instantly
+      setMySchedule((prevSchedule) =>
+        prevSchedule.filter((course) => course._id !== courseId),
+      );
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const filteredSchedule = mySchedule.filter((cls) => {
+    const search = searchQuery.toLowerCase();
+    const name = cls["Course Title"]?.toLowerCase() || "";
+    const id = cls["Course ID"]?.toLowerCase() || "";
+    return name.includes(search) || id.includes(search);
+  });
+
   return (
     <div className="flex flex-col items-center flex-1 w-full bg-gray-50 dark:bg-neutral-950/90 p-8 pt-12 transition-colors duration-300">
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 transition-colors duration-300">
         My Class Schedule
       </h1>
 
-      {isLoading && <p className="text-white mb-4">Loading your schedule...</p>}
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="p-2 pl-4 mb-4 rounded-2xl my-1 border border-transparent bg-neutral-700/50 hover:bg-rose-950/80 focus-within:border-rose-950 focus-within:bg-rose-950 outline-none transition-all w-1/2 text-white"
+        placeholder="Search by ID or Name..."
+      />
+
+      {isLoading && (
+        <p className="text-gray-600 dark:text-gray-400">
+          Loading your schedule...
+        </p>
+      )}
       {error && <p className="text-red-500 mb-4">{error}</p>}
 
       {!isLoading && !error && (
         <div className="w-full max-w-5xl overflow-x-auto rounded-xl shadow-lg">
-          {/* Re-using the table-fixed class from Signup to prevent jumping */}
           <table className="w-full table-fixed text-left text-gray-700 dark:text-neutral-300 border-collapse transition-colors duration-300">
             <thead className="bg-gray-200 dark:bg-neutral-900 text-gray-800 dark:text-neutral-100 uppercase text-sm transition-colors duration-300">
               <tr>
-                <th className="px-6 py-4 w-[20%]">ID</th>
-                <th className="px-6 py-4 w-[40%]">Name</th>
-                <th className="px-6 py-4 w-[20%]">Classroom</th>
-                <th className="px-6 py-4 w-[20%]">Credits</th>
+                <th className="px-6 py-4 w-[15%]">ID</th>
+                <th className="px-6 py-4 w-[25%]">Name</th>
+                <th className="px-6 py-4 w-[15%]">Classroom</th>
+                <th className="px-6 py-4 w-[15%]">Credits</th>
+                <th className="px-6 py-4 w-[15%]">Cost</th>
+                <th className="px-6 py-4 w-[15%] text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-neutral-800/50 divide-y divide-gray-200 dark:divide-neutral-700/50 transition-colors duration-300">
-              {mySchedule.map((cls) => (
-                <tr
-                  key={cls._id}
-                  className="hover:bg-gray-100 dark:hover:bg-neutral-700/50 transition-colors"
-                >
-                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                    {cls["Course ID"]}
-                  </td>
-                  <td className="px-6 py-4">{cls["Course Title"]}</td>
-                  <td className="px-6 py-4">{cls["Classroom Number"]}</td>
-                  <td className="px-6 py-4">{cls["Credit Hours"]}</td>
-                </tr>
+              {filteredSchedule.map((cls) => (
+                <React.Fragment key={cls._id}>
+                  <tr className="hover:bg-gray-100 dark:hover:bg-neutral-700/50 transition-colors">
+                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                      {cls["Course ID"]}
+                    </td>
+                    <td className="px-6 py-4">{cls["Course Title"]}</td>
+                    <td className="px-6 py-4">{cls["Classroom Number"]}</td>
+                    <td className="px-6 py-4">{cls["Credit Hours"]}</td>
+                    <td className="px-6 py-4">{cls["Tuition Cost"]}</td>
+                    <td className="px-6 py-4 flex gap-3 justify-center items-center">
+                      <button
+                        onClick={() => toggleRow(cls._id)}
+                        className="p-2 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-full transition-all outline-none"
+                        title={
+                          expandedRow === cls._id
+                            ? "Hide Details"
+                            : "Show Details"
+                        }
+                      >
+                        {expandedRow === cls._id ? (
+                          <FaChevronUp size={18} />
+                        ) : (
+                          <FaChevronDown size={18} />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleDropCourse(cls._id)}
+                        className="p-2 bg-rose-900 hover:bg-rose-800 text-white rounded-full transition-all outline-none shadow-md hover:shadow-lg hover:scale-105"
+                        title="Drop Course"
+                      >
+                        <FaTrash size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                  {expandedRow === cls._id && (
+                    <tr className="bg-gray-100 dark:bg-neutral-900/60 transition-all">
+                      <td
+                        colSpan="6"
+                        className="px-6 py-4 text-sm border-t border-gray-200 dark:border-neutral-700/50"
+                      >
+                        <div className="flex flex-col gap-2">
+                          <p>
+                            <span className="font-bold text-gray-900 dark:text-white">
+                              Course Description:{" "}
+                            </span>
+                            {cls["Course Description"] ||
+                              "No description provided."}
+                          </p>
+                          <p>
+                            <span className="font-bold text-gray-900 dark:text-white">
+                              Capacity:{" "}
+                            </span>
+                            {cls["Capacity"] || "N/A"}
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
               ))}
 
-              {/* Show a friendly message if their schedule is empty */}
-              {mySchedule.length === 0 && (
+              {filteredSchedule.length === 0 && (
                 <tr>
                   <td
-                    colSpan="4"
+                    colSpan="6"
                     className="px-6 py-4 text-center italic text-gray-500"
                   >
-                    You haven't signed up for any classes yet! Go to the Signup
-                    page to add some.
+                    {searchQuery
+                      ? "No courses match your search."
+                      : "You haven't signed up for any classes yet!"}
                   </td>
                 </tr>
               )}
