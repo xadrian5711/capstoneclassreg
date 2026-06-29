@@ -9,32 +9,7 @@ const protect = passport.authenticate("jwt", { session: false });
 router.post("/schedule", protect, async (req, res, next) => {
   try {
     const { courseId } = req.body;
-    const userId = req.user._id; // Securely provided by Passport from the cookie payload
-
-    // 1. Verify that the class actually exists in MongoDB
-    const course = await Course.findById(courseId);
-    if (!course) {
-      return res.status(404).json({ error: "Course not found." });
-    } // 2. Grab the student document
-    const student = await User.findById(userId);
-
-    // 3. Prevent duplicate selections
-    if (student.schedule.some((id) => id.toString() === courseId)) {
-      return res
-        .status(400)
-        .json({ error: "This course is already in your schedule." });
-    }
-
-    // 4. Push the course ID into the schedule array and save
-    student.schedule.push(courseId);
-    await student.save();
-
-  // ✅ CORRECTED
-  try {
-    const { courseId } = req.body;
     const userId = req.user._id;
-
-    // ... rest of your code ...
 
     // 1. Verify that the class actually exists in MongoDB
     const course = await Course.findById(courseId);
@@ -62,6 +37,7 @@ router.post("/schedule", protect, async (req, res, next) => {
     next(error); // Forwards any database glitches to your global server error handler
   }
 });
+
 router.get("/schedule", protect, async (req, res, next) => {
   try {
     // .populate("schedule") swaps raw ObjectIds for the actual course titles and details
@@ -82,6 +58,7 @@ router.get("/schedule", protect, async (req, res, next) => {
 router.delete("/schedule/:courseId", protect, async (req, res, next) => {
   try {
     const userId = req.user._id;
+    const { courseId } = req.params;
 
     const student = await User.findById(userId);
 
