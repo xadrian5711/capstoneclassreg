@@ -7,6 +7,28 @@ const router = express.Router();
 const protect = passport.authenticate("jwt", { session: false });
 
 router.post("/schedule", protect, async (req, res, next) => {
+  try {
+    const { courseId } = req.body;
+    const userId = req.user._id; // Securely provided by Passport from the cookie payload
+
+    // 1. Verify that the class actually exists in MongoDB
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ error: "Course not found." });
+    } // 2. Grab the student document
+    const student = await User.findById(userId);
+
+    // 3. Prevent duplicate selections
+    if (student.schedule.some((id) => id.toString() === courseId)) {
+      return res
+        .status(400)
+        .json({ error: "This course is already in your schedule." });
+    }
+
+    // 4. Push the course ID into the schedule array and save
+    student.schedule.push(courseId);
+    await student.save();
+
   // ✅ CORRECTED
   try {
     const { courseId } = req.body;
@@ -59,16 +81,18 @@ router.get("/schedule", protect, async (req, res, next) => {
 });
 router.delete("/schedule/:courseId", protect, async (req, res, next) => {
   try {
-    const { courseId } = req.params;
     const userId = req.user._id;
 
     const student = await User.findById(userId);
+
+    const hasCourse = student.schedule.some((id) => id.toString() === courseId);
+
     if (!student) {
       return res.status(404).json({ error: "Student not found." });
     }
 
     // Verify if the course is even on their schedule to begin with
-    if (!student.schedule.includes(courseId)) {
+    if (!hasCourse) {
       return res
         .status(400)
         .json({ error: "This course is not on your schedule." });
