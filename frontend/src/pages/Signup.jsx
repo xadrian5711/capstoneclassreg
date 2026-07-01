@@ -141,7 +141,7 @@ export function Signup() {
                         {/* Details Toggle Button */}
                         <button
                           onClick={() => toggleRow(cls._id)}
-                          className="p-2 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-full transition-all outline-none"
+                          className="p-2 cursor-pointer text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-full transition-all outline-none"
                           title={
                             expandedRow === cls._id
                               ? "Hide Details"
@@ -164,7 +164,7 @@ export function Signup() {
                         ) : (
                           <button
                             onClick={() => handleAddCourse(cls._id)}
-                            className="p-2 bg-rose-900 hover:bg-rose-800 text-white rounded-full transition-all outline-none shadow-md hover:shadow-lg hover:scale-105"
+                            className="p-2 cursor-pointer bg-rose-900 hover:bg-rose-800 text-white rounded-full transition-all outline-none shadow-md hover:shadow-lg hover:scale-105"
                             title="Add Course"
                           >
                             <FaPlus size={16} />

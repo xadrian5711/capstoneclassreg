@@ -161,7 +161,6 @@ router.patch("/users/:id/role", async (req, res, next) => {
     next(error);
   }
 });
-<<<<<<< Updated upstream
 
 // ============================================================
 // ROUTE 5: DELETE /api/admin/users/:userId/schedule/:courseId
@@ -187,8 +186,14 @@ router.delete("/users/:userId/schedule/:courseId", async (req, res, next) => {
       message: "Course dropped successfully from user's schedule.",
       user: updatedUser,
     });
-=======
-//  Route 5 DELETE /api/admin/users/:id (Permanently delete user)
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ============================================================
+// ROUTE 6: DELETE /api/admin/users/:id (Permanently delete user)
+// ============================================================
 router.delete("/users/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -199,24 +204,24 @@ router.delete("/users/:id", async (req, res, next) => {
     }
 
     const deletedUser = await User.findByIdAndDelete(id);
-    if (!deletedUser) return res.status(404).json({ error: "User not found." });
+    if (!deletedUser) {
+      return res.status(404).json({ error: "User not found." });
+    }
 
     res
       .status(200)
       .json({ message: `User '${deletedUser.username}' permanently removed.` });
->>>>>>> Stashed changes
   } catch (error) {
     next(error);
   }
 });
 
-<<<<<<< Updated upstream
-export default router;
-=======
 // 📚 COURSE & CURRICULUM MANAGEMENT ROUTES
-// ROUTE 6: POST /api/admin/courses
+// ============================================================
+// ROUTE 7: POST /api/admin/courses
 // DESCRIPTION: Create a brand new course in the catalog
-router.post("/Courses", async (req, res, next) => {
+// ============================================================
+router.post("/courses", async (req, res, next) => {
   try {
     // Assuming your Course schema looks for title, description, code, etc.
     const { title, description, code, creditHours } = req.body;
@@ -251,9 +256,10 @@ router.post("/Courses", async (req, res, next) => {
   }
 });
 
-// ROUTE 7: PUT /api/admin/courses/:id
+// ============================================================
+// ROUTE 8: PUT /api/admin/courses/:id
 // DESCRIPTION: Modify details of an existing course
-
+// ============================================================
 router.put("/courses/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -284,4 +290,5 @@ router.put("/courses/:id", async (req, res, next) => {
     next(error);
   }
 });
->>>>>>> Stashed changes
+
+export default router;

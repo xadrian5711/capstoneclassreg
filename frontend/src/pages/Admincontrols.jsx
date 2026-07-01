@@ -215,7 +215,7 @@ export function Admincontrols() {
                     <td className="p-4 text-center">
                       <button
                         onClick={() => toggleExpand(user._id)}
-                        className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-neutral-700 text-neutral-500 dark:text-neutral-400 transition-all"
+                        className="p-2 cursor-pointer rounded-full hover:bg-gray-200 dark:hover:bg-neutral-700 text-neutral-500 dark:text-neutral-400 transition-all"
                       >
                         <svg
                           className={`w-5 h-5 transition-transform duration-300 ${expandedUserId === user._id ? "rotate-180" : ""}`}

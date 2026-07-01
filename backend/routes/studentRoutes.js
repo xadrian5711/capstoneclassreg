@@ -55,18 +55,20 @@ router.get("/schedule", protect, async (req, res, next) => {
     next(error);
   }
 });
-router.delete("/schedule/:courseId", protect, async (req, res, next) => {
+router.delete("/schedule/:courseId", protect, async (req, res) => {
   try {
     const userId = req.user._id;
     const { courseId } = req.params;
 
     const student = await User.findById(userId);
 
-    const hasCourse = student.schedule.some((id) => id.toString() === courseId);
-
+    // 1. Check if student exists FIRST to prevent crashes
     if (!student) {
       return res.status(404).json({ error: "Student not found." });
     }
+
+    // 2. NOW it is safe to check their schedule
+    const hasCourse = student.schedule.some((id) => id.toString() === courseId);
 
     // Verify if the course is even on their schedule to begin with
     if (!hasCourse) {
@@ -84,7 +86,9 @@ router.delete("/schedule/:courseId", protect, async (req, res, next) => {
       schedule: student.schedule,
     });
   } catch (error) {
-    next(error);
+    // 3. Log the error for you, but send JSON to the frontend!
+    console.error("Error dropping course:", error);
+    res.status(500).json({ error: "Server error while dropping course." });
   }
 });
 
