@@ -291,4 +291,50 @@ router.put("/courses/:id", async (req, res, next) => {
   }
 });
 
+// ============================================================
+// ROUTE: POST /api/admin/users
+// DESCRIPTION: Administratively create a brand new user account
+// ============================================================
+router.post("/users", async (req, res, next) => {
+  try {
+    const { username, email, password, name, isAdmin } = req.body;
+
+    // 1. Validate required fields
+    if (!username || !email || !password) {
+      return res
+        .status(400)
+        .json({ error: "Username, email, and password are required." });
+    }
+
+    // 2. Check for conflicts
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ error: "A user with that email or username already exists." });
+    }
+
+    // 3. Create the user
+    const newUser = new User({
+      username,
+      email,
+      password, // Note: Ensure your User.js model has a pre('save') hook to hash this!
+      name: name || "",
+      isAdmin: isAdmin || false,
+    });
+
+    await newUser.save();
+
+    // 4. Send back the new user (excluding password) so the frontend can update the table
+    const userResponse = await User.findById(newUser._id).select("-password");
+
+    res.status(201).json({
+      message: "User created successfully.",
+      user: userResponse,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
