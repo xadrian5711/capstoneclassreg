@@ -6,17 +6,14 @@ export function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [expandedRow, setExpandedRow] = useState(null);
-
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
   useEffect(() => {
     const fetchMySchedule = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:3002/api/auth/my-schedule",
-          {
-            method: "GET",
-            credentials: "include", // Send the cookie!
-          },
-        );
+        const response = await fetch(`${API_BASE_URL}/api/auth/my-schedule`, {
+          method: "GET",
+          credentials: "include", // Send the cookie!
+        });
 
         if (!response.ok) {
           throw new Error("Failed to fetch schedule. Are you logged in?");
@@ -44,7 +41,7 @@ export function Home() {
     try {
       // 1. Make the request to the backend
       const response = await fetch(
-        `http://localhost:3002/api/students/schedule/${courseId}`,
+        `${API_BASE_URL}/api/students/schedule/${courseId}`,
         {
           method: "DELETE",
           credentials: "include",

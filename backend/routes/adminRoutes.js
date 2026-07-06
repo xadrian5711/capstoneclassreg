@@ -367,4 +367,20 @@ router.post("/users", async (req, res, next) => {
   }
 });
 
+// ROUTE: GET /api/admin/courses/:id/students
+// DESCRIPTION: Get a roster of all students enrolled in a specific course
+router.get("/courses/:id/students", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    // Find all users who have this course ID sitting in their schedule array
+    const enrolledStudents = await User.find({ schedule: id }).select(
+      "-password",
+    );
+
+    res.status(200).json(enrolledStudents);
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

@@ -24,10 +24,16 @@ app.use(cookieParser());
 // 4. Global Middleware
 app.use(morgan("dev"));
 app.use(express.json());
+// backend/server.js
+
+// Update your CORS middleware to look like this:
 app.use(
   cors({
-    origin: "http://localhost:5173", // <-- Change this to match your exact frontend URL/port
-    credentials: true, // <-- Crucial for allowing cookies
+    origin: [
+      "http://localhost:5173", // Keep this so local development still works
+      "https://student.john5bb.com", // Whitelist your live frontend
+    ],
+    credentials: true, // Essential since you are using cookies/JWTs
   }),
 );
 app.use(passport.initialize());
@@ -51,12 +57,9 @@ app.use((err, req, res, next) => {
 
   // Catch Mongoose duplicate key errors (like trying to register an existing email)
   if (err.code === 11000) {
-    return res
-      .status(400)
-      .json({
-        error:
-          "Unique validation constraint failed. Field value already exists.",
-      });
+    return res.status(400).json({
+      error: "Unique validation constraint failed. Field value already exists.",
+    });
   }
 
   // Catch general validation or casting errors (like passing an invalid MongoDB ObjectId)

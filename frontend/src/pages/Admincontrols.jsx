@@ -19,8 +19,7 @@ export function Admincontrols() {
     fullP: true,
   });
 
-  const API_BASE_URL = "http://localhost:3002/api/admin";
-
+  const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api/admin`;
   const fetchOptions = {
     headers: { "Content-Type": "application/json" },
     credentials: "include",
@@ -151,6 +150,28 @@ export function Admincontrols() {
         prevUsers.map((u) => (u._id === selectedUser._id ? data.user : u)),
       );
       setSelectedUser(null);
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (
+      !window.confirm("Are you sure you want to permanently delete this user?")
+    )
+      return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/users/${userId}`, {
+        ...fetchOptions,
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to delete user");
+
+      // Remove the deleted user from the table instantly
+      setUsers((prevUsers) => prevUsers.filter((u) => u._id !== userId));
     } catch (err) {
       alert(err.message);
     }
@@ -291,6 +312,12 @@ export function Admincontrols() {
                         } px-4 py-1.5 rounded-xl font-medium transition-colors cursor-pointer`}
                       >
                         {user.isAdmin ? "Revoke" : "Make Admin"}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteUser(user._id)}
+                        className="bg-red-500 text-white hover:bg-red-600 px-4 py-1.5 rounded-xl font-medium transition-colors cursor-pointer"
+                      >
+                        Delete
                       </button>
                     </td>
                   </tr>

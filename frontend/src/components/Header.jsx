@@ -20,7 +20,7 @@ export function Header() {
     isAdmin: false,
     fullP: true,
   });
-
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
   // --- STATE: NEW COURSE ---
   const [isAddCourseOpen, setIsAddCourseOpen] = useState(false);
   const [newCourse, setNewCourse] = useState({
@@ -83,7 +83,7 @@ export function Header() {
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:3002/api/admin/users", {
+      const res = await fetch(`${API_BASE_URL}/api/admin/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -115,7 +115,7 @@ export function Header() {
   const handleCreateCourse = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:3002/api/admin/courses", {
+      const res = await fetch(`${API_BASE_URL}/api/admin/courses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

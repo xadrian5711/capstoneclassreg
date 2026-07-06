@@ -16,6 +16,7 @@ export function Login() {
     adminCode: "",
   });
   const [errorMsg, setErrorMsg] = useState("");
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   // 2. Update state when user types
   const handleChange = (e) => {
@@ -29,8 +30,8 @@ export function Login() {
 
     // Decide which URL to hit based on the toggle
     const endpoint = isLogin
-      ? "http://localhost:3002/api/auth/login"
-      : "http://localhost:3002/api/auth/signup";
+      ? `${API_BASE_URL}/api/auth/login`
+      : `${API_BASE_URL}/api/auth/signup`;
 
     // Basic validation for signup
     if (!isLogin && formData.password !== formData.confirmPassword) {

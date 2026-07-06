@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-// NEW: Import your icons here!
-import { FaChevronDown, FaChevronUp, FaPlus } from "react-icons/fa";
+import { FaChevronDown, FaChevronUp, FaPlus, FaTrash } from "react-icons/fa"; // Added FaTrash for admin delete
 
 export function Signup() {
   const [courses, setCourses] = useState([]);
@@ -8,58 +7,46 @@ export function Signup() {
   const [error, setError] = useState("");
   const [expandedRow, setExpandedRow] = useState(null);
   const [enrolledIds, setEnrolledIds] = useState([]);
-  // NEW: Search state
   const [searchQuery, setSearchQuery] = useState("");
 
+  // NEW: State for Admin features
+  const [currentUser, setCurrentUser] = useState(null);
+  const [rosters, setRosters] = useState({}); // Stores student lists by courseId
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
   useEffect(() => {
-    // This function will be called when the 'courseAdded' event is dispatched
     const handleCourseAdded = (event) => {
       const newCourse = event.detail;
-
-      // Add the new course to the existing list in state
       setCourses((prevCourses) => [...prevCourses, newCourse]);
     };
-
-    // Set up the event listener
     window.addEventListener("courseAdded", handleCourseAdded);
-
-    // Clean up the event listener when the component unmounts
-    // to prevent memory leaks
-    return () => {
-      window.removeEventListener("courseAdded", handleCourseAdded);
-    };
-  }, []); // The empty dependency array ensures this effect runs only once on mount
+    return () => window.removeEventListener("courseAdded", handleCourseAdded);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 1. Fetch all available courses
-        const coursesRes = await fetch("http://localhost:3002/api/courses", {
-          method: "GET",
-          credentials: "include",
-        });
-
-        // 2. Fetch the user's current schedule
-        const scheduleRes = await fetch(
-          "http://localhost:3002/api/auth/my-schedule",
-          {
-            method: "GET",
+        // 2. Swap out the hardcoded URL for your new variable
+        const [coursesRes, scheduleRes, userRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/api/courses`, { credentials: "include" }),
+          fetch(`${API_BASE_URL}/api/auth/my-schedule`, {
             credentials: "include",
-          },
-        );
+          }),
+          fetch(`${API_BASE_URL}/api/auth/me`, { credentials: "include" }),
+        ]);
 
-        if (!coursesRes.ok || !scheduleRes.ok) {
-          throw new Error("Failed to fetch data. Are you logged in?");
-        }
+        if (!coursesRes.ok) throw new Error("Failed to fetch courses.");
 
         const coursesData = await coursesRes.json();
-        const scheduleData = await scheduleRes.json();
-
-        // 3. Extract just the IDs of the courses the user is enrolled in
-        const myIds = scheduleData.map((course) => course._id);
-
         setCourses(coursesData);
-        setEnrolledIds(myIds); // <-- Save them to state!
+
+        // If the user is logged in, grab their schedule and profile
+        if (scheduleRes.ok && userRes.ok) {
+          const scheduleData = await scheduleRes.json();
+          const userData = await userRes.json();
+
+          setEnrolledIds(scheduleData.map((course) => course._id));
+          setCurrentUser(userData.user); // Save the user to check if they are Admin
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -70,27 +57,22 @@ export function Signup() {
     fetchData();
   }, []);
 
-  // NEW: Function to toggle the details dropdown
   const toggleRow = (id) => {
-    // If clicking the row that's already open, close it. Otherwise, open the new one.
     setExpandedRow(expandedRow === id ? null : id);
   };
 
+  // =====================================
+  // STUDENT FUNCTIONS
+  // =====================================
   const handleAddCourse = async (courseId) => {
     try {
-      const response = await fetch(
-        "http://localhost:3002/api/auth/add-course",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ courseId }),
-        },
-      );
+      const response = await fetch(`${API_BASE_URL}/api/auth/add-course`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ courseId }),
+      });
 
-      // Safer error handling to prevent React from crashing
       if (!response.ok) {
         const contentType = response.headers.get("content-type");
         if (contentType && contentType.includes("application/json")) {
@@ -105,10 +87,7 @@ export function Signup() {
         }
       }
 
-      // 1. Instantly update the Enrolled badge
       setEnrolledIds((prevIds) => [...prevIds, courseId]);
-
-      // 2. Instantly update the 0/30 UI capacity counter
       setCourses((prevCourses) =>
         prevCourses.map((course) => {
           if (course._id === courseId) {
@@ -128,39 +107,95 @@ export function Signup() {
     }
   };
 
+  // =====================================
+  // ADMIN FUNCTIONS
+  // =====================================
+  const handleDeleteCourse = async (courseId) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to permanently delete this course?",
+      )
+    )
+      return;
+
+    try {
+      const res = await fetch(
+        `http://localhost:3002/api/admin/courses/${courseId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        },
+      );
+
+      if (!res.ok) throw new Error("Failed to delete course");
+
+      // Remove it from the table instantly
+      setCourses((prev) => prev.filter((c) => c._id !== courseId));
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleToggleRoster = async (courseId) => {
+    // Make sure the dropdown is open so they can see the roster
+    if (expandedRow !== courseId) setExpandedRow(courseId);
+
+    // If it's already fetched and open, just hide it
+    if (rosters[courseId]) {
+      const newRosters = { ...rosters };
+      delete newRosters[courseId];
+      setRosters(newRosters);
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `http://localhost:3002/api/admin/courses/${courseId}/students`,
+        {
+          credentials: "include",
+        },
+      );
+      if (!res.ok) throw new Error("Failed to fetch roster");
+
+      const data = await res.json();
+      setRosters({ ...rosters, [courseId]: data });
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center flex-1 w-full bg-gray-50 dark:bg-neutral-950/90 px-8 transition-colors duration-300">
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white my-2 transition-colors duration-300">
-        Select the classes u want to take!
+        Course Catalog
       </h1>
 
       <input
         type="text"
-        value={searchQuery} // Tie input to state
-        onChange={(e) => setSearchQuery(e.target.value)} // Update state on type
-        className="p-2 pl-4 mb-4 rounded-2xl my-1 border border-transparent bg-neutral-700/50 hover:bg-rose-950/80 focus-within:border-rose-950 focus-within:bg-rose-950 outline-none transition-all w-1/2 text-white"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="p-2 pl-4 mb-4 rounded-2xl my-1 border border-transparent bg-neutral-200 dark:bg-neutral-700/50 hover:bg-gray-300 dark:hover:bg-rose-950/80 focus-within:border-rose-950 focus-within:bg-rose-950 outline-none transition-all w-1/2 text-gray-900 dark:text-white"
         placeholder="Search by ID or Name..."
       />
 
-      {isLoading && <p className="text-white mb-4">Loading courses...</p>}
+      {isLoading && (
+        <p className="text-gray-900 dark:text-white mb-4">Loading courses...</p>
+      )}
       {error && <p className="text-red-500 mb-4">{error}</p>}
 
       {!isLoading && !error && (
         <div className="w-full max-w-5xl overflow-x-auto rounded-xl shadow-lg">
-          {/* 1. Add 'table-fixed' to the main table class */}
           <table className="w-full table-fixed text-left text-gray-700 dark:text-neutral-300 border-collapse transition-colors duration-300">
             <thead className="bg-gray-200 dark:bg-neutral-900 text-gray-800 dark:text-neutral-100 uppercase text-sm transition-colors duration-300">
               <tr>
-                {/* 2. Add specific widths to each column so they stay exactly this size */}
                 <th className="px-6 py-4 w-[15%]">ID</th>
                 <th className="px-6 py-4 w-[25%]">Name</th>
                 <th className="px-6 py-4 w-[15%]">Classroom</th>
                 <th className="px-6 py-4 w-[15%]">Credits</th>
                 <th className="px-6 py-4 w-[15%]">Cost</th>
-                <th className="px-6 py-4 w-[15%] text-center">Actions</th>
+                <th className="px-6 py-4 w-[20%] text-center">Actions</th>
               </tr>
             </thead>
-            {/* ... keep your tbody exactly the same! */}
             <tbody className="bg-white dark:bg-neutral-800/50 divide-y divide-gray-200 dark:divide-neutral-700/50 transition-colors duration-300">
               {courses
                 .filter((cls) => {
@@ -181,9 +216,8 @@ export function Signup() {
                       <td className="px-6 py-4">{cls["Credit Hours"]}</td>
                       <td className="px-6 py-4">{cls["Tuition Cost"]}</td>
 
-                      {/* NEW: Action Buttons with React Icons */}
+                      {/* ACTIONS COLUMN */}
                       <td className="px-6 py-4 flex gap-3 justify-center items-center">
-                        {/* Details Toggle Button */}
                         <button
                           onClick={() => toggleRow(cls._id)}
                           className="p-2 cursor-pointer text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-full transition-all outline-none"
@@ -193,7 +227,6 @@ export function Signup() {
                               : "Show Details"
                           }
                         >
-                          {/* If the row is open, show UP arrow. If closed, show DOWN arrow */}
                           {expandedRow === cls._id ? (
                             <FaChevronUp size={18} />
                           ) : (
@@ -201,8 +234,25 @@ export function Signup() {
                           )}
                         </button>
 
-                        {/* Add Course Button OR Enrolled Badge */}
-                        {enrolledIds.includes(cls._id) ? (
+                        {/* CONDITIONAL RENDERING: Admin vs Student */}
+                        {currentUser?.isAdmin ? (
+                          <>
+                            <button
+                              onClick={() => handleToggleRoster(cls._id)}
+                              className="px-3 py-1 text-sm cursor-pointer bg-indigo-100 hover:bg-indigo-200 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 dark:hover:bg-indigo-900/60 rounded-xl transition-all font-bold"
+                            >
+                              {rosters[cls._id] ? "Hide Roster" : "Roster"}
+                            </button>
+                            <button
+                              onClick={() => handleDeleteCourse(cls._id)}
+                              className="p-2 cursor-pointer bg-red-600 hover:bg-red-700 text-white rounded-full transition-all outline-none shadow-md hover:scale-105"
+                              title="Delete Course"
+                            >
+                              <FaTrash size={14} />
+                            </button>
+                          </>
+                        ) : /* Standard User View */
+                        enrolledIds.includes(cls._id) ? (
                           <span className="px-3 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400 rounded-full text-xs font-bold tracking-wide shadow-sm">
                             Enrolled
                           </span>
@@ -218,10 +268,9 @@ export function Signup() {
                       </td>
                     </tr>
 
-                    {/* DETAILS ROW (Only shows if this specific row's ID matches the expandedRow state) */}
+                    {/* DETAILS ROW */}
                     {expandedRow === cls._id && (
                       <tr className="bg-gray-100 dark:bg-neutral-900/60 transition-all">
-                        {/* colSpan="6" makes this cell stretch across the entire table width */}
                         <td
                           colSpan="6"
                           className="px-6 py-4 text-sm border-t border-gray-200 dark:border-neutral-700/50"
@@ -239,7 +288,6 @@ export function Signup() {
                               <span className="font-bold text-gray-900 dark:text-white">
                                 Capacity:{" "}
                               </span>
-                              {/* Safely get the length of the enrolled array, then show the max capacity */}
                               <span className="text-indigo-600 dark:text-indigo-400 font-bold">
                                 {cls.enrolledStudents
                                   ? cls.enrolledStudents.length
@@ -247,6 +295,33 @@ export function Signup() {
                               </span>{" "}
                               / {cls.capacity || cls["Capacity"] || 30}
                             </p>
+
+                            {/* ADMIN ROSTER VIEW (Appears inside the expanded row) */}
+                            {currentUser?.isAdmin && rosters[cls._id] && (
+                              <div className="mt-3 p-4 bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 shadow-sm">
+                                <h4 className="font-bold text-gray-900 dark:text-white mb-2 pb-2 border-b border-gray-100 dark:border-neutral-700">
+                                  Enrolled Students ({rosters[cls._id].length})
+                                </h4>
+                                {rosters[cls._id].length > 0 ? (
+                                  <ul className="list-disc pl-5 space-y-1 text-gray-600 dark:text-gray-300">
+                                    {rosters[cls._id].map((student) => (
+                                      <li key={student._id}>
+                                        <span className="font-medium text-gray-900 dark:text-white">
+                                          {student.name || student.username}
+                                        </span>{" "}
+                                        <span className="text-xs text-gray-400">
+                                          ({student.email})
+                                        </span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  <p className="text-gray-500 dark:text-gray-400 italic text-sm">
+                                    No students currently enrolled.
+                                  </p>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </td>
                       </tr>
