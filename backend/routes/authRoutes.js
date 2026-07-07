@@ -63,6 +63,7 @@ router.post("/signup", async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("Signup Error:", error);
     res.status(500).json({ error: "Server error. Please try again." });
   }
 });
@@ -92,7 +93,9 @@ router.post("/login", async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
+      path: "/",
     });
 
     res.status(200).json({
@@ -108,6 +111,7 @@ router.post("/login", async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("Login Error:", error);
     res.status(500).json({ error: "Server error. Please try again." });
   }
 });
@@ -117,6 +121,7 @@ router.post("/login", async (req, res) => {
 // ==========================================
 router.put("/update", protectWithJSON, async (req, res) => {
   try {
+    // Note: This route is for a user to update their OWN profile.
     const userId = req.user._id; // <-- Pull the ID straight from our custom middleware
     const user = await User.findById(userId);
     if (!user) {
@@ -180,11 +185,81 @@ router.put("/update", protectWithJSON, async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("Profile Update Error:", error);
     res.status(500).json({ error: "Server error. Failed to update profile." });
   }
 });
 
-// ... keeping all your signup, login, and update routes exactly as they are ...
+// ==========================================
+// NEW: ROUTE: PUT /api/auth/users/:id (Admin only)
+// ==========================================
+router.put("/users/:id", protectWithJSON, async (req, res, next) => {
+  // 1. Check if the logged-in user is an admin
+  if (!req.user.isAdmin) {
+    return res.status(403).json({ error: "Forbidden: Admin access required." });
+  }
+
+  try {
+    // The rest of the logic is the same as your /update route,
+    // but it uses the ID from the URL params instead of the logged-in user's ID.
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    const { username, name, email, phone, address, isAdmin } = req.body;
+
+    // Check for unique conflicts if username or email is being modified
+    if (username && username !== user.username) {
+      const conflict = await User.findOne({ username });
+      if (conflict)
+        return res.status(400).json({ error: "Username already in use." });
+      user.username = username;
+    }
+
+    if (email && email !== user.email) {
+      const conflict = await User.findOne({ email });
+      if (conflict)
+        return res.status(400).json({ error: "Email already in use." });
+      user.email = email;
+    }
+
+    // Safely update remaining details if provided
+    if (name !== undefined) user.name = name;
+    if (phone !== undefined) user.phoneNumber = phone;
+    if (isAdmin !== undefined) user.isAdmin = isAdmin;
+
+    if (address) {
+      user.address = {
+        street: address.street || user.address?.street,
+        city: address.city || user.address?.city,
+        state: address.state || user.address?.state,
+        zipCode: address.zipCode || user.address?.zipCode,
+        country: address.country || user.address?.country || "USA",
+      };
+    }
+
+    // Re-evaluate profile completeness flag based on updates
+    user.fullP = !!(
+      user.name &&
+      user.phoneNumber &&
+      user.address?.street &&
+      user.address?.city &&
+      user.address?.state &&
+      user.address?.zipCode
+    );
+
+    const updatedUser = await user.save();
+
+    res.status(200).json({
+      message: "Profile updated successfully by admin!",
+      user: updatedUser.toObject(), // Send back the updated user data
+    });
+  } catch (error) {
+    // Pass database or other errors to your global error handler
+    next(error);
+  }
+});
 
 // ==========================================
 // 4. ROUTE: GET /api/auth/me (Verifies token & returns real DB data)
@@ -206,6 +281,7 @@ router.get("/me", protectWithJSON, async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("Session Validation Error:", error);
     res.status(500).json({ error: "Server error validating session." });
   }
 });

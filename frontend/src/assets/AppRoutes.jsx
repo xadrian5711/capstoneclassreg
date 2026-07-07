@@ -20,12 +20,18 @@ export function AppRoutes() {
       // Only hit the database if localStorage thinks the user is already logged in
       if (localStorage.getItem("isAuthenticated") === "true") {
         try {
-          const response = await fetch("http://localhost:3002/api/auth/me", {
+          // ✅ ADD THIS LINE to pull your environment variable
+          const API_BASE_URL =
+            import.meta.env.VITE_API_URL || "https://api.student.john5bb.com";
+
+          // ✅ UPDATE THIS LINE to use the variable instead of localhost
+          const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
             method: "GET",
             credentials: "include", // <-- Crucial! Sends the secure httpOnly cookie
           });
 
           const data = await response.json();
+          // ... rest of the code remains the same
 
           if (response.ok) {
             // 1. Force localStorage to match the absolute truth of MongoDB
