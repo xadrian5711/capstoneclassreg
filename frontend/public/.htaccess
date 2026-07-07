@@ -1,0 +1,16 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /student/
+  
+  # If the requested route is the index, do nothing
+  RewriteRule ^index\.html$ - [L]
+  
+  # If the requested route is NOT a valid file...
+  RewriteCond %{REQUEST_FILENAME} !-f
+  
+  # ...and is NOT a valid directory...
+  RewriteCond %{REQUEST_FILENAME} !-d
+  
+  # ...then route the request to index.html
+  RewriteRule . /student/index.html [L]
+</IfModule>

@@ -84,7 +84,7 @@ export function Modal({ onClose }) {
     };
 
     try {
-      const response = await fetch("http://localhost:3002/api/auth/update", {
+      const response = await fetch(`${API_BASE_URL}/api/auth/update`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include", // <-- FIXED: Automatically forwards login cookie back to system

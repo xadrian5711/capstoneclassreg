@@ -1,11 +1,9 @@
 import express from "express";
-import passport from "passport";
 import User from "../models/User.js";
 import Course from "../models/Courses.js";
+import { protectWithJSON } from "./authMiddleware.js";
 
 const router = express.Router();
-
-const protect = passport.authenticate("jwt", { session: false });
 
 // 2. Custom Middleware: Blocks anyone whose isAdmin flag is false
 const adminOnly = (req, res, next) => {
@@ -17,7 +15,7 @@ const adminOnly = (req, res, next) => {
     .json({ error: "Access denied. Admin privileges required." });
 };
 
-router.use(protect, adminOnly);
+router.use(protectWithJSON, adminOnly);
 
 // ROUTE 1: GET /api/admin/users
 // DESCRIPTION: Get a master list of all users in the system

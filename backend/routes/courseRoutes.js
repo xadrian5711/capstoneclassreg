@@ -1,14 +1,18 @@
 import express from "express";
-import passport from "passport";
 import Course from "../models/Courses.js";
+import { protectWithJSON } from "./authMiddleware.js";
 
 const router = express.Router();
-const protect = passport.authenticate("jwt", { session: false });
 
-router.get("/", protect, async (req, res, next) => {
+router.get("/", protectWithJSON, async (req, res, next) => {
   try {
     // Finds all documents in your "courses" collection
-    const courses = await Course.find({});
+    // .populate() will swap student ObjectIds with their full documents
+    // We select '-password' to exclude sensitive password hashes from the response
+    const courses = await Course.find({}).populate(
+      "enrolledStudents",
+      "-password",
+    );
 
     res.status(200).json(courses);
   } catch (error) {

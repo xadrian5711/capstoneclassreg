@@ -1,15 +1,14 @@
 import express from "express";
-import passport from "passport";
 import User from "../models/User.js";
 import Course from "../models/Courses.js";
+import { protectWithJSON } from "./authMiddleware.js";
 
 const router = express.Router();
-const protect = passport.authenticate("jwt", { session: false });
 
 // ROUTE 1: POST /api/students/schedule
 // DESCRIPTION: Register for a course (With Capacity & Two-Way Sync)
 // ============================================================
-router.post("/schedule", protect, async (req, res, next) => {
+router.post("/schedule", protectWithJSON, async (req, res, next) => {
   try {
     const { courseId } = req.body;
     const userId = req.user._id; // Securely provided by Passport from the cookie payload
@@ -65,7 +64,7 @@ router.post("/schedule", protect, async (req, res, next) => {
 
 //ROUTE 2: GET /api/students/schedule
 // DESCRIPTION: Fetch current student's full curriculum dashboard details
-router.get("/schedule", protect, async (req, res, next) => {
+router.get("/schedule", protectWithJSON, async (req, res, next) => {
   try {
     // .populate("schedule") swaps raw ObjectIds for the actual course titles and details
     const student = await User.findById(req.user._id).populate("schedule");
@@ -86,49 +85,55 @@ router.get("/schedule", protect, async (req, res, next) => {
 // ROUTE 3: DELETE /api/students/schedule/:courseId
 // DESCRIPTION: Drop a course (With Two-Way Relationship Roster Cleanup)
 // ============================================================
-router.delete("/schedule/:courseId", protect, async (req, res, next) => {
-  try {
-    const userId = req.user._id;
-    const { courseId } = req.params;
+router.delete(
+  "/schedule/:courseId",
+  protectWithJSON,
+  async (req, res, next) => {
+    try {
+      const userId = req.user._id;
+      const { courseId } = req.params;
 
-    // 1. Fetch the student profile
-    const student = await User.findById(userId);
-    if (!student) {
-      return res.status(404).json({ error: "Student not found." });
+      // 1. Fetch the student profile
+      const student = await User.findById(userId);
+      if (!student) {
+        return res.status(404).json({ error: "Student not found." });
+      }
+
+      // 2. Fetch the target course document
+      const course = await Course.findById(courseId);
+      if (!course) {
+        return res.status(404).json({ error: "Course not found." });
+      }
+
+      // 3. Verify if the course is actually on their schedule to begin with
+      const hasCourse = student.schedule.some(
+        (id) => id.toString() === courseId,
+      );
+      if (!hasCourse) {
+        return res
+          .status(400)
+          .json({ error: "This course is not on your schedule." });
+      }
+
+      // 4. TWO-WAY CLEANUP: Atomically remove cross-references from BOTH arrays
+      // Update the student using standard Mongoose pulls
+      student.schedule.pull(courseId);
+      await student.save();
+
+      // Use .updateOne() to bypass full document validation and strictly modify the array
+      await Course.updateOne(
+        { _id: courseId },
+        { $pull: { enrolledStudents: userId } },
+      );
+
+      res.status(200).json({
+        message: `Successfully dropped ${course.courseTitle || "the course"}.`,
+        schedule: student.schedule,
+      });
+    } catch (error) {
+      next(error);
     }
-
-    // 2. Fetch the target course document
-    const course = await Course.findById(courseId);
-    if (!course) {
-      return res.status(404).json({ error: "Course not found." });
-    }
-
-    // 3. Verify if the course is actually on their schedule to begin with
-    const hasCourse = student.schedule.some((id) => id.toString() === courseId);
-    if (!hasCourse) {
-      return res
-        .status(400)
-        .json({ error: "This course is not on your schedule." });
-    }
-
-    // 4. TWO-WAY CLEANUP: Atomically remove cross-references from BOTH arrays
-    // Update the student using standard Mongoose pulls
-    student.schedule.pull(courseId);
-    await student.save();
-
-    // Use .updateOne() to bypass full document validation and strictly modify the array
-    await Course.updateOne(
-      { _id: courseId },
-      { $pull: { enrolledStudents: userId } },
-    );
-
-    res.status(200).json({
-      message: `Successfully dropped ${course.courseTitle || "the course"}.`,
-      schedule: student.schedule,
-    });
-  } catch (error) {
-    next(error);
-  }
-});
+  },
+);
 
 export default router;
