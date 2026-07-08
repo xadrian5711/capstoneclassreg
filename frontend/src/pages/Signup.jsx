@@ -119,13 +119,10 @@ export function Signup() {
       return;
 
     try {
-      const res = await fetch(
-        `http://localhost:3002/api/admin/courses/${courseId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        },
-      );
+      const res = await fetch(`${API_BASE_URL}/api/admin/courses/${courseId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
 
       if (!res.ok) throw new Error("Failed to delete course");
 
@@ -150,7 +147,7 @@ export function Signup() {
 
     try {
       const res = await fetch(
-        `http://localhost:3002/api/admin/courses/${courseId}/students`,
+        `${API_BASE_URL}/api/admin/courses/${courseId}/students`,
         {
           credentials: "include",
         },

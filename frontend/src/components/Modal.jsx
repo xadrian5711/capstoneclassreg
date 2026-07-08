@@ -4,13 +4,14 @@ import { BsFillPencilFill, BsFillXCircleFill } from "react-icons/bs";
 export function Modal({ onClose }) {
   const [isEditing, setIsEditing] = useState(false);
   const [userId, setUserId] = useState(""); // <-- ADDED: Track user ID for DB queries
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
   const [errorMsg, setErrorMsg] = useState(""); // State for error messages
 
   const [userData, setUserData] = useState({
     username: "",
     name: "",
     email: "",
-    phone: "",
+    phoneNumber: "",
   });
 
   const [addressData, setAddressData] = useState({
@@ -32,7 +33,7 @@ export function Modal({ onClose }) {
           username: storedUser.username || "",
           name: storedUser.name || "",
           email: storedUser.email || "",
-          phone: storedUser.phoneNumber || "",
+          phoneNumber: storedUser.phoneNumber || "",
         });
 
         if (storedUser.address) {
@@ -66,7 +67,9 @@ export function Modal({ onClose }) {
   };
 
   // FIXED: Turned into an async function that communicates with MongoDB
-  const handleSaveChanges = async () => {
+  const handleSaveChanges = async (e) => {
+    // Make sure this has the 'e' parameter
+    e.preventDefault(); // And that you prevent the default form submission
     setErrorMsg("");
 
     const payload = {
@@ -74,7 +77,7 @@ export function Modal({ onClose }) {
       username: userData.username,
       name: userData.name,
       email: userData.email,
-      phone: userData.phone, // This should be phoneNumber to match the backend schema
+      phoneNumber: userData.phoneNumber,
       address: {
         street: addressData.street,
         city: addressData.city,
@@ -142,8 +145,8 @@ export function Modal({ onClose }) {
           <p className="text-lg font-thin">
             <span className="font-semibold text-sm uppercase w-24 inline-block text-rose-100">
               Phone:
-            </span>{" "}
-            {userData.phone || "Add"}
+            </span>
+            {userData.phoneNumber || "Add"}
           </p>
           <p className="text-lg font-thin truncate">
             <span className="font-semibold text-sm uppercase w-24 inline-block text-rose-100">
@@ -221,8 +224,8 @@ export function Modal({ onClose }) {
                       Phone Number
                     </label>
                     <input
-                      name="phone"
-                      value={userData.phone}
+                      name="phoneNumber"
+                      value={userData.phoneNumber}
                       onChange={handleUserChange}
                       className="w-full bg-rose-950/60 border border-rose-800 rounded-xl p-2.5 text-white focus:ring-2 focus:ring-rose-400 transition-all outline-none"
                       type="tel"

@@ -128,18 +128,21 @@ router.put("/update", protectWithJSON, async (req, res) => {
       return res.status(404).json({ error: "User not found." });
     }
 
-    const { username, name, email, phone, address } = req.body;
+    const { username, name, email, phoneNumber, address } = req.body;
 
     // Check for unique conflicts if username or email is being modified
-    if (username && username !== user.username) {
-      const conflict = await User.findOne({ username });
+    // The User schema forces username to lowercase. To prevent case-variant
+    // duplicates (e.g., 'john' and 'John'), we must check against the lowercase version.
+    if (username && username.toLowerCase() !== user.username) {
+      const conflict = await User.findOne({ username: username.toLowerCase() });
       if (conflict)
         return res.status(400).json({ error: "Username already in use." });
       user.username = username;
     }
 
-    if (email && email !== user.email) {
-      const conflict = await User.findOne({ email });
+    // The User schema also forces email to lowercase.
+    if (email && email.toLowerCase() !== user.email) {
+      const conflict = await User.findOne({ email: email.toLowerCase() });
       if (conflict)
         return res.status(400).json({ error: "Email already in use." });
       user.email = email;
@@ -147,7 +150,7 @@ router.put("/update", protectWithJSON, async (req, res) => {
 
     // Safely update remaining details if provided
     if (name !== undefined) user.name = name;
-    if (phone !== undefined) user.phoneNumber = phone;
+    if (phoneNumber !== undefined) user.phoneNumber = phoneNumber;
 
     if (address) {
       user.address = {
@@ -169,95 +172,21 @@ router.put("/update", protectWithJSON, async (req, res) => {
       user.address?.zipCode
     );
 
-    const updatedUser = await user.save();
+    await user.save();
+
+    // Re-fetch the user with the schedule populated to send back to the client
+    const userResponse = await User.findById(userId)
+      .select("-password")
+      .populate("schedule");
 
     res.status(200).json({
       message: "Profile updated successfully!",
-      user: {
-        id: updatedUser._id,
-        username: updatedUser.username,
-        name: updatedUser.name,
-        email: updatedUser.email,
-        isAdmin: updatedUser.isAdmin,
-        fullP: updatedUser.fullP,
-        phoneNumber: updatedUser.phoneNumber,
-        address: updatedUser.address,
-      },
+      user: userResponse,
     });
   } catch (error) {
+    // Log the error and send a generic server error response
     console.error("Profile Update Error:", error);
-    res.status(500).json({ error: "Server error. Failed to update profile." });
-  }
-});
-
-// ==========================================
-// NEW: ROUTE: PUT /api/auth/users/:id (Admin only)
-// ==========================================
-router.put("/users/:id", protectWithJSON, async (req, res, next) => {
-  // 1. Check if the logged-in user is an admin
-  if (!req.user.isAdmin) {
-    return res.status(403).json({ error: "Forbidden: Admin access required." });
-  }
-
-  try {
-    // The rest of the logic is the same as your /update route,
-    // but it uses the ID from the URL params instead of the logged-in user's ID.
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ error: "User not found." });
-    }
-
-    const { username, name, email, phone, address, isAdmin } = req.body;
-
-    // Check for unique conflicts if username or email is being modified
-    if (username && username !== user.username) {
-      const conflict = await User.findOne({ username });
-      if (conflict)
-        return res.status(400).json({ error: "Username already in use." });
-      user.username = username;
-    }
-
-    if (email && email !== user.email) {
-      const conflict = await User.findOne({ email });
-      if (conflict)
-        return res.status(400).json({ error: "Email already in use." });
-      user.email = email;
-    }
-
-    // Safely update remaining details if provided
-    if (name !== undefined) user.name = name;
-    if (phone !== undefined) user.phoneNumber = phone;
-    if (isAdmin !== undefined) user.isAdmin = isAdmin;
-
-    if (address) {
-      user.address = {
-        street: address.street || user.address?.street,
-        city: address.city || user.address?.city,
-        state: address.state || user.address?.state,
-        zipCode: address.zipCode || user.address?.zipCode,
-        country: address.country || user.address?.country || "USA",
-      };
-    }
-
-    // Re-evaluate profile completeness flag based on updates
-    user.fullP = !!(
-      user.name &&
-      user.phoneNumber &&
-      user.address?.street &&
-      user.address?.city &&
-      user.address?.state &&
-      user.address?.zipCode
-    );
-
-    const updatedUser = await user.save();
-
-    res.status(200).json({
-      message: "Profile updated successfully by admin!",
-      user: updatedUser.toObject(), // Send back the updated user data
-    });
-  } catch (error) {
-    // Pass database or other errors to your global error handler
-    next(error);
+    res.status(500).json({ error: "Server error during profile update." });
   }
 });
 

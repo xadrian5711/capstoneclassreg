@@ -66,15 +66,19 @@ router.put("/users/:id", async (req, res, next) => {
     }
 
     // Check for unique conflicts if username or email is being modified
-    if (username && username !== user.username) {
-      const conflict = await User.findOne({ username });
+    if (username && username.toLowerCase() !== user.username) {
+      const conflict = await User.findOne({
+        username: username.toLowerCase(),
+      });
       if (conflict)
         return res.status(400).json({ error: "Username already in use." });
       user.username = username;
     }
 
-    if (email && email !== user.email) {
-      const conflict = await User.findOne({ email });
+    if (email && email.toLowerCase() !== user.email) {
+      const conflict = await User.findOne({
+        email: email.toLowerCase(),
+      });
       if (conflict)
         return res.status(400).json({ error: "Email already in use." });
       user.email = email;
@@ -370,14 +374,22 @@ router.post("/users", async (req, res, next) => {
 router.get("/courses/:id/students", async (req, res, next) => {
   try {
     const { id } = req.params;
-    // Find all users who have this course ID sitting in their schedule array
-    const enrolledStudents = await User.find({ schedule: id }).select(
-      "-password",
-    );
+    // FIXED: This now fetches the course and populates the students,
+    // which is much more efficient than scanning the entire User collection.
+    const course = await Course.findById(id).populate({
+      path: "enrolledStudents",
+      select: "-password", // Exclude passwords from the student data
+    });
 
-    res.status(200).json(enrolledStudents);
+    if (!course) {
+      return res.status(404).json({ error: "Course not found." });
+    }
+
+    res.status(200).json(course.enrolledStudents);
   } catch (error) {
-    next(error);
+    // ADDED: Consistent error handling to prevent server crashes/hangs.
+    console.error("Error fetching course roster:", error);
+    res.status(500).json({ error: "Server error fetching roster." });
   }
 });
 

@@ -46,11 +46,6 @@ app.use("/api/courses", courseRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/admin", adminRoutes);
 
-// 6. Error Handling Middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: "Something went wrong!" });
-});
 // 7 Global error handling middleware (must take 4 parameters: err, req, res, next)
 app.use((err, req, res, next) => {
   console.error("❌ Global Error Handler Triggered:", err.stack || err.message);

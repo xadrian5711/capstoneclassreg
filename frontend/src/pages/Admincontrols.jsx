@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { FaTrash } from "react-icons/fa";
 
 export function Admincontrols() {
   const [users, setUsers] = useState([]);
@@ -317,7 +318,7 @@ export function Admincontrols() {
                         onClick={() => handleDeleteUser(user._id)}
                         className="bg-red-500 text-white hover:bg-red-600 px-4 py-1.5 rounded-xl font-medium transition-colors cursor-pointer"
                       >
-                        Delete
+                        <FaTrash />
                       </button>
                     </td>
                   </tr>
