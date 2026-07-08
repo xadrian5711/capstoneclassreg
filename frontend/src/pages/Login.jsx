@@ -38,7 +38,6 @@ export function Login() {
       return setErrorMsg("Passwords do not match!");
     }
 
-    // FIXED: Construct a clean body depending on if we are logging in or signing up
     const payload = isLogin
       ? {
           username: formData.username,
@@ -55,7 +54,7 @@ export function Login() {
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // <-- FIXED: Tells browser to capture secure cookie payload
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 
@@ -150,12 +149,11 @@ export function Login() {
             {clicked && (
               <input
                 name="adminCode"
-                value={formData.adminCode} // Fixed: matches your state
+                value={formData.adminCode}
                 onChange={handleChange}
                 className="bg-rose-950 p-2 pl-4 rounded-2xl mt-2 border border-transparent hover:bg-rose-950/80 focus-within:border-rose-950 focus-within:bg-rose-950 outline-none transition-all"
                 type="password"
                 placeholder="Enter secret admin code"
-                // Note: No 'required' attribute here so normal users can still sign up!
               />
             )}
           </div>

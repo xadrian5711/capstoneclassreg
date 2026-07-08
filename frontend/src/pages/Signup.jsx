@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaChevronDown, FaChevronUp, FaPlus, FaTrash } from "react-icons/fa"; // Added FaTrash for admin delete
+import { FaChevronDown, FaChevronUp, FaPlus, FaTrash } from "react-icons/fa";
 
 export function Signup() {
   const [courses, setCourses] = useState([]);
@@ -8,10 +8,8 @@ export function Signup() {
   const [expandedRow, setExpandedRow] = useState(null);
   const [enrolledIds, setEnrolledIds] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-
-  // NEW: State for Admin features
   const [currentUser, setCurrentUser] = useState(null);
-  const [rosters, setRosters] = useState({}); // Stores student lists by courseId
+  const [rosters, setRosters] = useState({});
   const API_BASE_URL = import.meta.env.VITE_API_URL;
   useEffect(() => {
     const handleCourseAdded = (event) => {
@@ -25,7 +23,6 @@ export function Signup() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 2. Swap out the hardcoded URL for your new variable
         const [coursesRes, scheduleRes, userRes] = await Promise.all([
           fetch(`${API_BASE_URL}/api/courses`, { credentials: "include" }),
           fetch(`${API_BASE_URL}/api/auth/my-schedule`, {

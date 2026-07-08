@@ -41,7 +41,7 @@ const courseSchema = new mongoose.Schema(
     enrolledStudents: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User", // References your User model if you track registrations
+        ref: "User",
       },
     ],
   },

@@ -1,16 +1,14 @@
-// 1. Imports using ES Module syntax
 import "dotenv/config";
 import express from "express";
 import morgan from "morgan";
 import cors from "cors";
 import passport from "passport";
-import cookieParser from "cookie-parser"; // FIXED: Changed from require to import
+import cookieParser from "cookie-parser";
 import { applyPassportStrategy } from "./config/passport.js";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
 
-// (Leave these commented out until you actually build them)
 import studentRoutes from "./routes/studentRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 
@@ -24,16 +22,11 @@ app.use(cookieParser());
 // 4. Global Middleware
 app.use(morgan("dev"));
 app.use(express.json());
-// backend/server.js
 
-// Update your CORS middleware to look like this:
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173", // Keep this so local development still works
-      "https://student.john5bb.com", // Whitelist your live frontend
-    ],
-    credentials: true, // Essential since you are using cookies/JWTs
+    origin: ["http://localhost:5173", "https://student.john5bb.com"],
+    credentials: true,
   }),
 );
 app.use(passport.initialize());
@@ -42,11 +35,9 @@ applyPassportStrategy(passport);
 // 5. Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
-// (Leave these commented out until you actually build them)
 app.use("/api/students", studentRoutes);
 app.use("/api/admin", adminRoutes);
 
-// 7 Global error handling middleware (must take 4 parameters: err, req, res, next)
 app.use((err, req, res, next) => {
   console.error("❌ Global Error Handler Triggered:", err.stack || err.message);
 

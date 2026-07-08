@@ -90,14 +90,13 @@ export function Modal({ onClose }) {
       const response = await fetch(`${API_BASE_URL}/api/auth/update`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // <-- FIXED: Automatically forwards login cookie back to system
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        // Dispatch a custom event to notify other components (like the Header)
         window.dispatchEvent(
           new CustomEvent("userProfileUpdated", { detail: data.user }),
         );

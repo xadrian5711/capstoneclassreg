@@ -47,7 +47,7 @@ const userSchema = new mongoose.Schema(
     schedule: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Course", // This must match the model name you used for your courses!
+        ref: "Course",
       },
     ],
   },

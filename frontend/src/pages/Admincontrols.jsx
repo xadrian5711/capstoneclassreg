@@ -7,7 +7,6 @@ export function Admincontrols() {
   const [expandedUserId, setExpandedUserId] = useState(null); // Tracks the open row
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  // --- STATE FOR CREATING A USER ---
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newUser, setNewUser] = useState({
     username: "",
@@ -137,9 +136,9 @@ export function Admincontrols() {
           username: selectedUser.username,
           name: selectedUser.name,
           email: selectedUser.email,
-          phone: selectedUser.phoneNumber, // Corrected from 'phone'
-          address: selectedUser.address, // Now passing full address object!
-          fullP: selectedUser.fullP, // <-- Add this line to preserve the status
+          phone: selectedUser.phoneNumber,
+          address: selectedUser.address,
+          fullP: selectedUser.fullP,
         }),
       });
 

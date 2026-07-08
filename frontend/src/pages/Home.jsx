@@ -35,8 +35,6 @@ export function Home() {
     setExpandedRow(expandedRow === id ? null : id);
   };
 
-  // Inside your handleDropCourse function...
-
   const handleDropCourse = async (courseId) => {
     try {
       // 1. Make the request to the backend

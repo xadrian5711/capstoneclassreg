@@ -117,7 +117,7 @@ router.post("/login", async (req, res) => {
 });
 
 // ==========================================
-// 3. FIXED: ROUTE: PUT /api/auth/update (Now standalone!)
+// 3. ROUTE: PUT /api/auth/update
 // ==========================================
 router.put("/update", protectWithJSON, async (req, res) => {
   try {
@@ -202,7 +202,7 @@ router.get("/me", protectWithJSON, async (req, res) => {
       user: {
         id: user._id,
         username: user.username,
-        name: user.name, // <--- ADD THIS LINE
+        name: user.name,
         email: user.email,
         isAdmin: user.isAdmin,
         phoneNumber: user.phoneNumber,

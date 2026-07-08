@@ -1,6 +1,4 @@
 import React, { useState } from "react";
-// Assuming you have access to your `currentUser` object from context/auth
-// const { currentUser } = useAuth();
 
 export function CourseCard({ course, currentUser, setCourses }) {
   const [roster, setRoster] = useState([]);
@@ -54,9 +52,7 @@ export function CourseCard({ course, currentUser, setCourses }) {
   };
 
   // Function for students to enroll
-  const handleEnroll = async (courseId) => {
-    // Your existing enroll logic...
-  };
+  const handleEnroll = async (courseId) => {};
 
   return (
     <div className="border p-4 rounded-xl mb-4 bg-white dark:bg-neutral-900">

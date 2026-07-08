@@ -187,14 +187,13 @@ router.delete("/users/:id", async (req, res, next) => {
   }
 });
 
-// 📚 COURSE & CURRICULUM MANAGEMENT ROUTES
+// COURSE & CURRICULUM MANAGEMENT ROUTES
 // ============================================================
 // ROUTE 7: POST /api/admin/courses
 // DESCRIPTION: Create a brand new course in the catalog
 // ============================================================
 router.post("/courses", async (req, res, next) => {
   try {
-    // Assuming your Course schema looks for title, description, code, etc.
     const {
       courseId,
       courseTitle,
@@ -225,7 +224,7 @@ router.post("/courses", async (req, res, next) => {
       courseTitle: courseTitle.trim(),
       courseDescription: courseDescription ? courseDescription.trim() : "",
       classroomNumber: classroomNumber ? classroomNumber.trim() : "",
-      capacity: capacity !== undefined ? capacity : 30, // Default baseline matching your schema
+      capacity: capacity !== undefined ? capacity : 30,
       creditHours: creditHours || 0,
       tuitionCost: tuitionCost || "",
       enrolledStudents: [], // Start with an empty roster array // Fallback value if your model uses credits
@@ -341,7 +340,7 @@ router.post("/users", async (req, res, next) => {
     const newUser = new User({
       username,
       email,
-      password, // Note: Ensure your User.js model has a pre('save') hook to hash this!
+      password,
       name: name || "",
       phoneNumber: phone || "",
       address: {
@@ -352,7 +351,7 @@ router.post("/users", async (req, res, next) => {
         country: "USA",
       },
       isAdmin: isAdmin || false,
-      fullP: fullP || false, // Pass the `fullP` value from the request
+      fullP: fullP || false,
     });
 
     await newUser.save();
@@ -374,8 +373,7 @@ router.post("/users", async (req, res, next) => {
 router.get("/courses/:id/students", async (req, res, next) => {
   try {
     const { id } = req.params;
-    // FIXED: This now fetches the course and populates the students,
-    // which is much more efficient than scanning the entire User collection.
+
     const course = await Course.findById(id).populate({
       path: "enrolledStudents",
       select: "-password", // Exclude passwords from the student data
@@ -387,7 +385,6 @@ router.get("/courses/:id/students", async (req, res, next) => {
 
     res.status(200).json(course.enrolledStudents);
   } catch (error) {
-    // ADDED: Consistent error handling to prevent server crashes/hangs.
     console.error("Error fetching course roster:", error);
     res.status(500).json({ error: "Server error fetching roster." });
   }
