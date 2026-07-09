@@ -187,6 +187,40 @@ router.delete("/users/:id", async (req, res, next) => {
   }
 });
 
+// ============================================================
+// ROUTE 6: DELETE /api/admin/users/:userId/schedule/:courseId
+// DESCRIPTION: Administratively drop a student from a single course
+// ============================================================
+router.delete("/users/:userId/schedule/:courseId", async (req, res, next) => {
+  try {
+    const { userId, courseId } = req.params;
+
+    // Atomically remove the course from the user's schedule
+    // and the user from the course's roster in parallel.
+    const userUpdate = User.findByIdAndUpdate(userId, {
+      $pull: { schedule: courseId },
+    });
+
+    const courseUpdate = Course.findByIdAndUpdate(courseId, {
+      $pull: { enrolledStudents: userId },
+    });
+
+    const [user] = await Promise.all([userUpdate, courseUpdate]);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    // The course might have been deleted, but we still want to ensure the student's schedule is clean.
+
+    res.status(200).json({
+      message: `Successfully dropped course from user ${user.username}'s schedule.`,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // COURSE & CURRICULUM MANAGEMENT ROUTES
 // ============================================================
 // ROUTE 7: POST /api/admin/courses

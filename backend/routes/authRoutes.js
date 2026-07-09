@@ -215,6 +215,9 @@ router.get("/me", protectWithJSON, async (req, res) => {
   }
 });
 
+// ==========================================
+// 5. ROUTE: POST /api/auth/add-course (Adds a course to user's schedule)
+// ==========================================
 router.post("/add-course", protectWithJSON, async (req, res, next) => {
   try {
     // 1. Check if the user has fullP privileges
@@ -261,7 +264,41 @@ router.post("/add-course", protectWithJSON, async (req, res, next) => {
 });
 
 // ==========================================
-// 6. ROUTE: GET /my-schedule (Fetches the user's classes)
+// 6. ROUTE: DELETE /api/auth/remove-course/:courseId (Drops a course)
+// ==========================================
+router.delete(
+  "/remove-course/:courseId",
+  protectWithJSON,
+  async (req, res, next) => {
+    try {
+      const { courseId } = req.params;
+      const userId = req.user._id;
+
+      // Use $pull to remove the course from the user's schedule
+      // and the user from the course's enrolled students list.
+      const userUpdate = User.findByIdAndUpdate(userId, {
+        $pull: { schedule: courseId },
+      });
+
+      const courseUpdate = Course.findByIdAndUpdate(courseId, {
+        $pull: { enrolledStudents: userId },
+      });
+
+      // Run updates in parallel for better performance
+      await Promise.all([userUpdate, courseUpdate]);
+
+      res
+        .status(200)
+        .json({ message: "Course successfully dropped from schedule." });
+    } catch (error) {
+      // Forward errors to the global error handler
+      next(error);
+    }
+  },
+);
+
+// ==========================================
+// 7. ROUTE: GET /my-schedule (Fetches the user's classes)
 // ==========================================
 router.get("/my-schedule", protectWithJSON, async (req, res, next) => {
   try {

@@ -8,9 +8,8 @@ import { applyPassportStrategy } from "./config/passport.js";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
-
-import studentRoutes from "./routes/studentRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import studentRoutes from "./routes/studentRoutes.js";
 
 // 2. Initialize App
 const app = express();
@@ -35,8 +34,8 @@ applyPassportStrategy(passport);
 // 5. Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
-app.use("/api/students", studentRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/students", studentRoutes);
 
 app.use((err, req, res, next) => {
   console.error("❌ Global Error Handler Triggered:", err.stack || err.message);
