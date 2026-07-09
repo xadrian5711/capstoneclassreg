@@ -219,9 +219,11 @@ export function Header() {
       </div>
 
       <div className="p-3 flex gap-2">
-        <NavLink to="/" className={linkStyles} end>
-          Dashboard
-        </NavLink>
+        {user && !user.isAdmin && (
+          <NavLink to="/" className={linkStyles} end>
+            Dashboard
+          </NavLink>
+        )}
         <NavLink to="/signup" className={linkStyles}>
           Sign Up
         </NavLink>

@@ -205,16 +205,20 @@ router.delete("/users/:userId/schedule/:courseId", async (req, res, next) => {
       $pull: { enrolledStudents: userId },
     });
 
-    const [user] = await Promise.all([userUpdate, courseUpdate]);
+    const [userBeforeUpdate] = await Promise.all([userUpdate, courseUpdate]);
 
-    if (!user) {
+    if (!userBeforeUpdate) {
       return res.status(404).json({ error: "User not found." });
     }
 
     // The course might have been deleted, but we still want to ensure the student's schedule is clean.
+    const updatedUser = await User.findById(userId)
+      .select("-password")
+      .populate("schedule");
 
     res.status(200).json({
-      message: `Successfully dropped course from user ${user.username}'s schedule.`,
+      message: `Successfully dropped course from user ${updatedUser.username}'s schedule.`,
+      user: updatedUser,
     });
   } catch (error) {
     next(error);
