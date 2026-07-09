@@ -63,7 +63,13 @@ export function Login() {
       if (response.ok) {
         localStorage.setItem("isAuthenticated", "true");
         localStorage.setItem("user", JSON.stringify(data.user));
-        navigate("/");
+
+        // Redirect admins to the course catalog, and users to their dashboard.
+        if (data.user?.isAdmin) {
+          navigate("/signup");
+        } else {
+          navigate("/");
+        }
       } else {
         setErrorMsg(data.error || "Something went wrong.");
       }

@@ -225,7 +225,7 @@ export function Header() {
           </NavLink>
         )}
         <NavLink to="/signup" className={linkStyles}>
-          Sign Up
+          Course Catalog
         </NavLink>
         {user?.isAdmin && (
           <NavLink to="/admin" className={linkStyles}>
